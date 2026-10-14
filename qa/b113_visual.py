@@ -54,3 +54,5 @@ server.shutdown()
 # Retest compact horizontal layout and portrait geometry.
 
 # Validate landscape 220px ring with uniformly scaled letter chips.
+
+# Retest landscape overflow anchoring.
