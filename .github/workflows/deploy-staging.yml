@@ -1,0 +1,36 @@
+name: Deploy B1.12 STAGING
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify staging identity
+        run: |
+          python - <<'PY'
+          import json, hashlib, pathlib
+          p=pathlib.Path('.')
+          d=json.loads((p/'CANDIDATE.json').read_text())
+          assert d['candidate']=='B1.12' and d['online']=='staging'
+          html=(p/'index.html').read_bytes()
+          assert hashlib.sha256(html).hexdigest()==d['index_sha256']
+          assert b'qbzrqinnhrgeqvgtifrt' in html
+          assert b'mcrnstwmubtiiacyiaeu' not in html
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deploy
+        uses: actions/deploy-pages@v4
