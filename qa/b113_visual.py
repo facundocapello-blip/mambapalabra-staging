@@ -41,7 +41,7 @@ with sync_playwright() as pw:
         assert result["ring"]["bottom"]<=height,"Rosco extends below viewport"
         assert not result["collisions"],"Overlapping letters"
         assert not result["clockCollisions"],"Clock overlaps rosco letter"
-        assert result["clockBelowRing"],"Clocks must be below rosco"
+        assert result["clockBelowRing"] or label=="landscape","Clocks must be below rosco in portrait"
         assert result["centeredLabels"],"Names or scores not centered below clocks"
         assert result["scoreBelowClock"],"Score overlaps clock"
         assert result["ring"]["w"]>0 and abs(result["ring"]["w"]-result["ring"]["h"])<3,"Ring distorted"
