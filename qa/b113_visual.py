@@ -46,3 +46,5 @@ with sync_playwright() as pw:
         page.close()
     browser.close()
 server.shutdown()
+
+# Regression: ring must not collapse after ResizeObserver updates.
