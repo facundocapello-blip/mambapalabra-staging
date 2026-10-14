@@ -56,3 +56,5 @@ server.shutdown()
 # Validate landscape 220px ring with uniformly scaled letter chips.
 
 # Retest landscape overflow anchoring.
+
+# Validate ring viewport correction.
