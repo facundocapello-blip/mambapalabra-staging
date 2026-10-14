@@ -50,3 +50,5 @@ server.shutdown()
 # Regression: ring must not collapse after ResizeObserver updates.
 
 # Retest compact horizontal layout and portrait geometry.
+
+# Validate landscape 220px ring with uniformly scaled letter chips.
