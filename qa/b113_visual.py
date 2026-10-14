@@ -58,3 +58,5 @@ server.shutdown()
 # Retest landscape overflow anchoring.
 
 # Validate ring viewport correction.
+
+# Recheck 172px landscape ring letter clearance.
