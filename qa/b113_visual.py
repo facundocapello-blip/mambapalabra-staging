@@ -48,3 +48,5 @@ with sync_playwright() as pw:
 server.shutdown()
 
 # Regression: ring must not collapse after ResizeObserver updates.
+
+# Retest compact horizontal layout and portrait geometry.
