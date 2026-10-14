@@ -31,6 +31,8 @@ with sync_playwright() as pw:
             clockCollisions:clocks.some(c=>chips.some(ch=>overlap(c,ch))),
             centerText:document.querySelector('.player-card.active .rosco-center').innerText,
             clockBelowRing:clocks.every(c=>c.y>=ring.bottom-2),
+            centeredLabels:[1,2].every(i=>{const a=box("#orbP"+i),n=box("#orbName"+i),v=box("#orbScore"+i);return Math.abs((a.x+a.w/2)-(n.x+n.w/2))<3&&Math.abs((a.x+a.w/2)-(v.x+v.w/2))<3}),
+            scoreBelowClock:[1,2].every(i=>box("#orbScore"+i).y>=box("#orbP"+i).bottom),
             viewport:{w:innerWidth,h:innerHeight}};
         }""")
         print(label,json.dumps(result),flush=True)
@@ -38,6 +40,8 @@ with sync_playwright() as pw:
         assert not result["collisions"],"Overlapping letters"
         assert not result["clockCollisions"],"Clock overlaps rosco letter"
         assert result["clockBelowRing"],"Clocks must be below rosco"
+        assert result["centeredLabels"],"Names or scores not centered below clocks"
+        assert result["scoreBelowClock"],"Score overlaps clock"
         assert result["ring"]["w"]>0 and abs(result["ring"]["w"]-result["ring"]["h"])<3,"Ring distorted"
         page.close()
     browser.close()
