@@ -1,0 +1,59 @@
+name: QA B1.12 - WebKit two players
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/qa-b112-webkit.yml'
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: facundocapello-blip/Mambapalabra
+          ref: qa/b112-guest-voice-handoff
+          path: candidate
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify published version and exact HTML hash
+        env:
+          STAGING_URL: https://facundocapello-blip.github.io/mambapalabra-staging/
+        run: |
+          python - <<'PY'
+          import json,hashlib,os,urllib.request
+          base=os.environ['STAGING_URL']
+          local=json.load(open('candidate/CANDIDATE.json'))
+          assert local['candidate']=='B1.12' and local['online']=='staging'
+          with urllib.request.urlopen(base+'CANDIDATE.json',timeout=30) as r:
+              remote=json.load(r)
+          assert remote['candidate']=='B1.12' and remote['online']=='staging'
+          assert remote['index_sha256']==local['index_sha256']
+          with urllib.request.urlopen(base+'index.html',timeout=30) as r:
+              html=r.read()
+          assert hashlib.sha256(html).hexdigest()==local['index_sha256']
+          assert b'mcrnstwmubtiiacyiaeu' not in html
+          print('STAGING build hash verified')
+          PY
+      - name: Install mobile WebKit
+        run: |
+          pip install playwright==1.62.0
+          python -m playwright install --with-deps webkit
+      - name: Run two-player live online E2E
+        working-directory: candidate
+        env:
+          MAMBA_BROWSER: webkit
+          MAMBA_STAGING_URL: https://facundocapello-blip.github.io/mambapalabra-staging/
+        run: python tests/test_staging_live_ui.py
+      - name: Save screenshots if available
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b112-webkit-screenshots
+          path: candidate/artifacts/online-staging/
+          if-no-files-found: ignore
