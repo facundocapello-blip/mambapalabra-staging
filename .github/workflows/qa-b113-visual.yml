@@ -1,0 +1,50 @@
+name: B1.13 iPhone visual QA (no deploy)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'qa/b113_visual.py'
+      - '.github/workflows/qa-b113-visual.yml'
+permissions:
+  contents: read
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: facundocapello-blip/Mambapalabra
+          ref: feature/b113-rosco-audio-ux
+          path: candidate
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install WebKit
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps webkit
+      - name: Verify B1.13 identity and staging backend
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          s=Path("candidate/index.html").read_text()
+          assert 'B1.13-ROSCO-PROTAGONISTA-STAGING' in s
+          assert 'qbzrqinnhrgeqvgtifrt' in s
+          assert 'mcrnstwmubtiiacyiaeu' not in s
+          assert 'await hostSpeak(wrongLead)' in s
+          assert 'toUpperCase(),3000' in s
+          print("B1.13 candidate and STAGING backend verified")
+          PY
+      - name: WebKit iPhone visual screenshots and collision checks
+        run: python qa/b113_visual.py
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: b113-iphone-webkit-screenshots
+          path: artifacts/b113-visual/
+          if-no-files-found: ignore
