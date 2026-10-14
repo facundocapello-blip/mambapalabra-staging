@@ -39,9 +39,17 @@ jobs:
           assert 'toUpperCase(),3000' in s
           print("B1.13 candidate and STAGING backend verified")
           PY
-      - name: Package verified B1.13 (do not deploy)\n        run: python candidate/tools/package_release_b113.py\n      - name: WebKit iPhone visual screenshots and collision checks
+      - name: Package verified B1.13 (do not deploy)
+        run: python candidate/tools/package_release_b113.py
+      - name: WebKit iPhone visual screenshots and collision checks
         run: python qa/b113_visual.py
-      - name: Upload isolated B1.13 ZIP\n        if: success()\n        uses: actions/upload-artifact@v4\n        with:\n          name: MAMBAPALABRA_B1_13_STAGING\n          path: candidate/dist/MAMBAPALABRA_B1_13_STAGING.zip\n      - name: Upload screenshots
+      - name: Upload isolated B1.13 ZIP
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: MAMBAPALABRA_B1_13_STAGING
+          path: candidate/dist/MAMBAPALABRA_B1_13_STAGING.zip
+      - name: Upload screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
