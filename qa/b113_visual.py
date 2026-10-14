@@ -37,6 +37,8 @@ with sync_playwright() as pw:
         }""")
         print(label,json.dumps(result),flush=True)
         assert result["chipCount"]==27, "Missing rosco letters"
+        assert result["ring"]["y"]>=0,"Rosco extends above viewport"
+        assert result["ring"]["bottom"]<=height,"Rosco extends below viewport"
         assert not result["collisions"],"Overlapping letters"
         assert not result["clockCollisions"],"Clock overlaps rosco letter"
         assert result["clockBelowRing"],"Clocks must be below rosco"
