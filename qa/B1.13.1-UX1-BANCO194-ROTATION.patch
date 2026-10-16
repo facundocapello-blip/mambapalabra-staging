@@ -1,6 +1,6 @@
 --- a/index.html
 +++ b/index.html
-@@ -1,15 +1,22 @@
+@@ -1,15 +1,20 @@
    function rotateQuestion(letter,bankKey,options){
 -    const ids=options.map(questionDrawId),offset=Math.max(1,Math.floor(ids.length/2))%ids.length;
 +    const ids=options.map(questionDrawId);
