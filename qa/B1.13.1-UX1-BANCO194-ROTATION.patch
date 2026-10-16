@@ -1,7 +1,6 @@
---- B1.13.1-UX1-BANCO194-STAGING/index.html
-+++ B1.13.1-UX1-BANCO194-ROTATION-STAGING/index.html
-@@ -818,21 +818,28 @@
-   }
+--- a/index.html
++++ b/index.html
+@@ -1,15 +1,22 @@
    function rotateQuestion(letter,bankKey,options){
 -    const ids=options.map(questionDrawId),offset=Math.max(1,Math.floor(ids.length/2))%ids.length;
 +    const ids=options.map(questionDrawId);
@@ -17,8 +16,6 @@
      }
 -    const id=state.order[(state.round+(bankKey==="Facu"?offset:0))%ids.length];
 -    if(bankKey==="Facu")state.round++;
-+    // Consume one question for each player, without reusing a letter's answer
-+    // until every available option has been used. Preserve progress in localStorage.
 +    if(state.round>=ids.length){
 +      const previous=state.order[ids.length-1];
 +      state.order=shuffledQuestions(ids);
