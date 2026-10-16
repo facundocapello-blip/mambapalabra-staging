@@ -1,0 +1,34 @@
+--- B1.13.1-UX1-BANCO194-STAGING/index.html
++++ B1.13.1-UX1-BANCO194-ROTATION-STAGING/index.html
+@@ -818,21 +818,28 @@
+   }
+   function rotateQuestion(letter,bankKey,options){
+-    const ids=options.map(questionDrawId),offset=Math.max(1,Math.floor(ids.length/2))%ids.length;
++    const ids=options.map(questionDrawId);
+     let state=questionRotations[letter];
+-    if(!state||!Array.isArray(state.order)||state.order.length!==ids.length||new Set(state.order).size!==ids.length||!state.order.every(id=>ids.includes(id))||!Number.isInteger(state.round)||state.round<0||state.round>=ids.length){
+-      const order=shuffledQuestions(ids),last1=questionPlayerRecent.Mamba?.[letter],last2=questionPlayerRecent.Facu?.[letter];
+-      const shifts=order.map((_,i)=>i).filter(i=>ids.length===1||(order[i]!==last1&&order[(i+offset)%ids.length]!==last2));
+-      const start=shifts.length?shifts[secureRandomIndex(shifts.length)]:0;
+-      state={order:order.slice(start).concat(order.slice(0,start)),round:0};
++    if(!state||!Array.isArray(state.order)||state.order.length!==ids.length||new Set(state.order).size!==ids.length||!state.order.every(id=>ids.includes(id))||!Number.isInteger(state.round)||state.round<0||state.round>ids.length){
++      state={order:shuffledQuestions(ids),round:0};
+       questionRotations[letter]=state;
+     }
+-    const id=state.order[(state.round+(bankKey==="Facu"?offset:0))%ids.length];
+-    if(bankKey==="Facu")state.round++;
++    // Consume one question for each player, without reusing a letter's answer
++    // until every available option has been used. Preserve progress in localStorage.
++    if(state.round>=ids.length){
++      const previous=state.order[ids.length-1];
++      state.order=shuffledQuestions(ids);
++      if(ids.length>1&&state.order[0]===previous){
++        const swap=1+secureRandomIndex(ids.length-1);
++        [state.order[0],state.order[swap]]=[state.order[swap],state.order[0]];
++      }
++      state.round=0;
++    }
++    const id=state.order[state.round++];
+     (questionDrawUsed[letter]??=[]).push(id);
+     if(!questionPlayerRecent[bankKey]||typeof questionPlayerRecent[bankKey]!=="object")questionPlayerRecent[bankKey]={};
+     questionPlayerRecent[bankKey][letter]=id;
