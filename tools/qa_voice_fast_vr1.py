@@ -72,7 +72,7 @@ def voice(frame,text,final=False):
     }""",{"text":text,"final":final})
 
 def change(frame,selector,old,timeout=1200):
-    frame.wait_for_function("""([sel,old])=>document.querySelector(sel).textContent.trim()!==old""",[selector,old],timeout=timeout)
+    frame.wait_for_function("""([sel,old])=>document.querySelector(sel).textContent.trim()!==old""",arg=[selector,old],timeout=timeout)
     return frame.evaluate("performance.now()")
 
 with sync_playwright() as p:
@@ -116,7 +116,7 @@ with sync_playwright() as p:
             frame.wait_for_function("() => !document.querySelector('#micBtn').disabled",timeout=3000)
             before=frame.locator("#activeName").inner_text().strip()
             t0=voice(frame,"pasapalabra")
-            frame.wait_for_function("""old=>document.querySelector('#activeName').textContent.trim()!==old""",before,timeout=700)
+            frame.wait_for_function("""old=>document.querySelector('#activeName').textContent.trim()!==old""",arg=before,timeout=700)
             elapsed=frame.evaluate("performance.now()")-t0
             assert elapsed<350,f"Pasapalabra tardó {elapsed:.0f} ms"
             print(f"[{label}] Pasapalabra por voz: {elapsed:.0f} ms",flush=True)
