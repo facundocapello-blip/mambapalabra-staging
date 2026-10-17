@@ -21,6 +21,7 @@
 | A08 | PASAPALABRA por botón y por voz; repetir definición; fin de tiempo; resultado; reinicio; muerte súbita | QA funcional adicional | PENDIENTE |
 | A09 | Online con dos sesiones independientes, turnos, resultado y revancha | QA con dos contextos y backend STAGING | PENDIENTE |
 | A10 | Safari en iPhone físico: reproducción de audio, permisos, relojes y latencia | Dispositivo real | PENDIENTE |\n| A11 | En WebKit horizontal 844×390, ENVIAR no debe quedar tapado por el badge Floot | [Reproducción](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39017646748) | FALLA: overlay de Floot intercepta el botón; corregir distribución sin pagar ni ocultar el badge |
+| A12 | Cinco partidas reales consecutivas conservando almacenamiento: primera palabra A distinta en cada una | [QA Chromium y WebKit](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39018998654) | PASÓ: 5/5 distintas en ambos navegadores; sin errores JS |
 
 ## Regla de relojes
 Los cronómetros de ambos jugadores deben avanzar **únicamente en ANSWERING**. Se mantienen pausados en READING, VALIDATING y SWITCHING, incluido el audio Piper y el cambio de turno.
@@ -32,3 +33,10 @@ Para cada cambio posterior, repetir A01–A07 y agregar el caso específico. No 
 - Los **811 MP3** del ZIP fueron examinados con `ffprobe` en contenedor local: **811/811 válidos**, 0 archivos corruptos, 56,24 minutos totales de audio.
 - ZIP íntegro B1.13.1 UX1 Piper: SHA256 `66157d89dd076ac5cc2fd27743d599d014fcf44e3efaec6d5d570e9869099f49`, 36.159.406 bytes, 811 MP3 nuevos + 188 originales.
 - Prueba WebKit en GitHub Actions: audios de definición y error HTTP 200, sin excepciones JS; el distintivo Floot se retiró únicamente en el navegador de QA para poder pulsar ENVIAR. **Eso no corrige A11.**
+
+## Aleatoriedad y palabras antiguas
+- Banco de 398 aprobadas: **193 palabras del banco anterior** y **205 nuevas**. Las antiguas siguen siendo candidatas válidas; verlas no significa que el sorteo esté fijo.
+- La rotación elige sin repetición por letra hasta agotar sus opciones; el número de opciones varía: A=17, B=19, K=6, W=7.
+- Simulación del selector exacto: 12 partidas × 2 jugadores × 27 letras = **648 selecciones**, sin repetición dentro de cada ciclo por letra.
+- QA de navegador: 5 partidas en Chromium y 5 en WebKit; en ambos, las cinco primeras respuestas de A fueron diferentes.
+- **La web de producción no recibió la versión STAGING**; si se juega desde el enlace habitual, no se está verificando el banco Piper de 398.
