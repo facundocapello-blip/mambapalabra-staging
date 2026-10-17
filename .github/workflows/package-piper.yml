@@ -1,11 +1,10 @@
-name: Paquete completo Piper 398 - STAGING
+name: Paquete completo Piper 398 VR1 lectura V2 - STAGING
 on:
   push:
     branches:
-      - qa/piper-audio-398
+      - qa/piper-fast-letter-v2
     paths:
-      - '.github/workflows/package-piper.yml'
-      - 'tools/package_piper_release.mjs'
+      - 'piper-audio/manifest.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,17 +15,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: qa/piper-audio-398
+          ref: qa/piper-fast-letter-v2
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - name: Install free JSZIP/diff dependencies
         run: npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
-      - name: Build full verified Piper release ZIP
+      - name: Verify 27 letters, direct pronunciation and faster MP3
+        run: python3 tools/qa_piper_fast_v2.py
+      - name: Build full verified Piper VR1 V2 release ZIP
         run: node tools/package_piper_release.mjs
       - name: Upload complete release ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: MAMBAPALABRA_B1.13.1_UX1_PIPER398_STAGING
-          path: dist/MAMBAPALABRA_B1.13.1_UX1_PIPER398_STAGING.zip
+          name: MAMBAPALABRA_B1.13.1_UX1_PIPER398_VR1_LECTURA_V2_STAGING
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_PIPER398_VR1_LECTURA_V2_STAGING.zip
           retention-days: 30
