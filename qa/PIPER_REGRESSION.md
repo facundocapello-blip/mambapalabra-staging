@@ -22,6 +22,7 @@
 | A09 | Online con dos sesiones independientes, turnos, resultado y revancha | QA con dos contextos y backend STAGING | PENDIENTE |
 | A10 | Safari en iPhone físico: reproducción de audio, permisos, relojes y latencia | Dispositivo real | PENDIENTE |\n| A11 | En WebKit horizontal 844×390, ENVIAR no debe quedar tapado por el badge Floot | [Reproducción](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39017646748) | FALLA: overlay de Floot intercepta el botón; corregir distribución sin pagar ni ocultar el badge |
 | A12 | Cinco partidas reales consecutivas conservando almacenamiento: primera palabra A distinta en cada una | [QA Chromium y WebKit](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39018998654) | PASÓ: 5/5 distintas en ambos navegadores; sin errores JS |
+| A13 | Valoración por voz VR1: parcial correcto inmediato; incorrecto a 320 ms; Pasapalabra por voz; final tardío prevalece; silencio no da falso error; reloj pausado | [QA Chromium y WebKit](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39024555814) | PASÓ: 6 ms/27 ms correcto, 333 ms/335 ms incorrecto, 9 ms/17 ms Pasapalabra |
 
 ## Regla de relojes
 Los cronómetros de ambos jugadores deben avanzar **únicamente en ANSWERING**. Se mantienen pausados en READING, VALIDATING y SWITCHING, incluido el audio Piper y el cambio de turno.
@@ -40,3 +41,11 @@ Para cada cambio posterior, repetir A01–A07 y agregar el caso específico. No 
 - Simulación del selector exacto: 12 partidas × 2 jugadores × 27 letras = **648 selecciones**, sin repetición dentro de cada ciclo por letra.
 - QA de navegador: 5 partidas en Chromium y 5 en WebKit; en ambos, las cinco primeras respuestas de A fueron diferentes.
 - **La web de producción no recibió la versión STAGING**; si se juega desde el enlace habitual, no se está verificando el banco Piper de 398.
+
+## B1.13.1-UX1-PIPER398-VR1 — 17/10/2026
+- **Reproducción:** versión anterior sin valoración tras 520 ms desde `onspeechend` si Web Speech solo devolvía un parcial y ningún resultado final; seguía sin valorar al cerrar el motor.
+- **Causa:** `onresult` ignoraba los resultados parciales; `onspeechend` esperaba hasta 1500 ms; `onend` descartaba el texto provisional.
+- **Corrección acotada:** `startRecognition` conserva el último parcial; acepta un correcto o `pasapalabra` al finalizar la voz, prioriza el resultado final y acepta un parcial no final tras 320 ms (o al cerrarse el motor). Si no hay texto, conserva la espera de seguridad de 1500 ms y no inventa una respuesta.
+- **Prueba automática real:** Chromium y WebKit, con SpeechRecognition simulado para reproducir temporizaciones controladas, sobre STAGING publicada. Se comprobaron aciertos, errores, Pasapalabra, prevalencia del final, ausencia de duplicados, silencio y relojes pausados en VALIDATING. **No es una prueba de reconocimiento acústico en micrófono real.**
+- **Evidencia:** https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39024555814
+- **Pendiente:** Safari iPhone físico y pruebas online completas con dos sesiones; A11 overlay Floot horizontal sigue sin corregirse.
