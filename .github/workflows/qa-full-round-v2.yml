@@ -1,0 +1,27 @@
+name: V2 flujo completo resultado y reinicio
+on:
+  push:
+    branches:
+      - qa/piper-fast-letter-v2
+    paths:
+      - '.github/workflows/qa-full-round-v2.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  full-round:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-fast-letter-v2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browsers
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Start, correct, timeout, results and restart
+        run: python tools/qa_full_round_v2.py
