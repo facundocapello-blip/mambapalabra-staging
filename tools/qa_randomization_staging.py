@@ -18,6 +18,7 @@ def run(engine, name):
         page.frame_locator("iframe").locator("#game").wait_for(state="visible",timeout=40000)
         frame=next((f for f in page.frames if f != page.main_frame and f.locator("#game").count()),None)
         assert frame is not None,"Iframe del juego ausente"
+        frame.wait_for_function("() => typeof game !== 'undefined' && !!game && Array.isArray(game.players) && game.players.length === 2", timeout=30000)
         result=frame.evaluate("""() => {
           // Se crea una partida real desde el menú. Luego se simulan 7 reinicios
           // con el mismo selector que utiliza resetGame(), sin esperar los audios.
