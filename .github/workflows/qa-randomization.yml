@@ -1,0 +1,27 @@
+name: Mambapalabra rotacion de palabras STAGING
+on:
+  push:
+    branches: [qa/piper-audio-398]
+    paths:
+      - 'tools/qa_randomization_staging.py'
+      - '.github/workflows/qa-randomization.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test-rotation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-audio-398
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and WebKit
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Check real STAGING game rotation
+        run: python tools/qa_randomization_staging.py
