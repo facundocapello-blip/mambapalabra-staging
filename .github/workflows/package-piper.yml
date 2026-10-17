@@ -1,0 +1,32 @@
+name: Paquete completo Piper 398 - STAGING
+on:
+  push:
+    branches:
+      - qa/piper-audio-398
+    paths:
+      - '.github/workflows/package-piper.yml'
+      - 'tools/package_piper_release.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-audio-398
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install free JSZIP/diff dependencies
+        run: npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+      - name: Build full verified Piper release ZIP
+        run: node tools/package_piper_release.mjs
+      - name: Upload complete release ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: MAMBAPALABRA_B1.13.1_UX1_PIPER398_STAGING
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_PIPER398_STAGING.zip
+          retention-days: 30
