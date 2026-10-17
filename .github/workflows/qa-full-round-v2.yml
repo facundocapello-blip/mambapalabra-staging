@@ -5,6 +5,7 @@ on:
       - qa/piper-fast-letter-v2
     paths:
       - '.github/workflows/qa-full-round-v2.yml'
+      - 'tools/qa_full_round_v2.py'
   workflow_dispatch:
 permissions:
   contents: read
