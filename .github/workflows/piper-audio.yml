@@ -1,8 +1,8 @@
-name: Piper audio 398 - STAGING gratis
+name: Piper audio 398 V2 letra directa y ritmo ágil
 on:
   push:
     branches:
-      - qa/piper-audio-398
+      - qa/piper-fast-letter-v2
     paths:
       - '.github/workflows/piper-audio.yml'
       - 'tools/generate_piper_bank.py'
@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: mambapalabra-piper-398
+  group: mambapalabra-piper-fast-v2
   cancel-in-progress: false
 jobs:
   generate:
@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: qa/piper-audio-398
+          ref: qa/piper-fast-letter-v2
           persist-credentials: true
       - name: Verify free open-source Piper dependencies
         shell: bash
@@ -59,6 +59,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to audio files"
           else
-            git commit -m "build(audio): 811 clips Piper para banco aprobado 398"
-            git push origin HEAD:qa/piper-audio-398
+            git commit -m "build(audio): 811 clips Piper V2 con letra directa y ritmo ágil"
+            git push origin HEAD:qa/piper-fast-letter-v2
           fi
