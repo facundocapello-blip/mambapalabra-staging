@@ -20,7 +20,7 @@ import urllib.request
 import wave
 
 SOURCE = "https://docs.google.com/spreadsheets/d/1BdB1GrSfQ0cFmfWC7nidqycvQvrlig9bHwl1rU1VNkU/gviz/tq?tqx=out:csv&sheet=Banco"
-BASE = "https://raw.githubusercontent.com/facundocapello-blip/mambapalabra-staging/qa/piper-audio-398/piper-audio/"
+BASE = "https://raw.githubusercontent.com/facundocapello-blip/mambapalabra-staging/qa/piper-fast-letter-v2/piper-audio/"
 EXPECTED = 398
 LETTERS = set("ABCDEFGHIJKLMNÑOPQRSTUVWXYZ")
 LETTER_NAMES = {
@@ -86,7 +86,7 @@ def prepare(rows, bank_sha):
     for i, r in enumerate(rows, 1):
         letter, answer, clue, rule = (r["Letra"].strip().upper(), r["Respuesta"].strip(), r["Definición"].strip(), r["_rule"])
         question_key = f"Contiene {letter}: {clue}" if rule == "CONTIENE" else f"{letter}: {clue}"
-        spoken = f"Contiene la {LETTER_NAMES[letter]}. {clue}" if rule == "CONTIENE" else f"Con la letra {LETTER_NAMES[letter]}. {clue}"
+        spoken = f"Contiene la {LETTER_NAMES[letter]}. {clue}" if rule == "CONTIENE" else f"{LETTER_NAMES[letter]}. {clue}"
         wrong_key = f"Incorrecto. Era {answer}."
         q_file, w_file = f"q{i:04d}.mp3", f"w{i:04d}.mp3"
         if question_key in entries or wrong_key in entries:
@@ -105,6 +105,7 @@ def prepare(rows, bank_sha):
     return {
         "schema": 1, "voice": "es_MX-claude-high", "engine": "Piper",
         "voice_dataset_license": "Apache-2.0", "approved": EXPECTED,
+        "voice_style": "letra-directa-v2", "length_scale": 0.90, "sentence_silence": 0.08,
         "clips": len(jobs), "bank_sha256": bank_sha,
         "entries": entries, "rows": items,
     }, jobs
@@ -118,7 +119,7 @@ def synthesize(piper, model, jobs, out_dir, bitrate):
             output = tmp / (pathlib.Path(filename).stem + ".wav")
             inputs.append(json.dumps({"text": spoken, "output_file": str(output)}, ensure_ascii=False))
         print("Generando", len(inputs), "WAV con una sola sesión de Piper", flush=True)
-        with subprocess.Popen([str(piper), "--model", str(model), "--json-input", "--output_dir", str(tmp), "--length_scale", "1.08", "--sentence_silence", "0.12"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True) as proc:
+        with subprocess.Popen([str(piper), "--model", str(model), "--json-input", "--output_dir", str(tmp), "--length_scale", "0.90", "--sentence_silence", "0.08"], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True) as proc:
             _, stderr = proc.communicate("\n".join(inputs) + "\n", timeout=1500)
             if proc.returncode:
                 raise RuntimeError("Piper falló: " + stderr[-2000:])
