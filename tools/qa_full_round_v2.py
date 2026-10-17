@@ -22,7 +22,7 @@ with sync_playwright() as p:
             f=page.frame_locator("iframe")
             f.locator("#lobby").wait_for(state="visible",timeout=90000)
             frame=next(fr for fr in page.frames if fr!=page.main_frame and fr.locator("#lobby").count())
-            frame.locator("#soundBtn").click()
+            frame.evaluate("document.querySelector('#soundBtn').click()")
             frame.evaluate("""() => {
               const sel=document.querySelector("#timerSelect");
               const option=document.createElement("option");
