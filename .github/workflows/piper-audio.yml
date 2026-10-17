@@ -1,0 +1,64 @@
+name: Piper audio 398 - STAGING gratis
+on:
+  push:
+    branches:
+      - qa/piper-audio-398
+    paths:
+      - '.github/workflows/piper-audio.yml'
+      - 'tools/generate_piper_bank.py'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: mambapalabra-piper-398
+  cancel-in-progress: false
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-audio-398
+          persist-credentials: true
+      - name: Verify free open-source Piper dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v ffmpeg || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+          mkdir -p /tmp/mamba-piper
+          curl -fLsS --retry 3 -o /tmp/mamba-piper/piper.tar.gz https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz
+          tar -xzf /tmp/mamba-piper/piper.tar.gz -C /tmp/mamba-piper
+          curl -fLsS --retry 3 -o /tmp/mamba-piper/es_MX-claude-high.onnx https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx
+          curl -fLsS --retry 3 -o /tmp/mamba-piper/es_MX-claude-high.onnx.json https://huggingface.co/rhasspy/piper-voices/resolve/main/es/es_MX/claude/high/es_MX-claude-high.onnx.json
+          /tmp/mamba-piper/piper/piper --help >/dev/null
+      - name: Generate and validate 811 MP3
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH=/tmp/mamba-piper/piper
+          python3 tools/generate_piper_bank.py --piper /tmp/mamba-piper/piper/piper --model /tmp/mamba-piper/es_MX-claude-high.onnx --out piper-audio
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          root=Path("piper-audio")
+          m=json.loads((root/"manifest.json").read_text(encoding="utf-8"))
+          assert m["approved"] == 398 and m["clips"] == 811
+          assert len(m["entries"]) == 811
+          assert len(list(root.glob("*.mp3"))) == 811
+          assert all(p.stat().st_size > 1200 for p in root.glob("*.mp3"))
+          print("QA MP3 OK: 398 preguntas + 398 errores + 15 frases fijas")
+          PY
+      - name: Commit only to isolated STAGING branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "mambapalabra-piper-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add piper-audio/
+          if git diff --cached --quiet; then
+            echo "No changes to audio files"
+          else
+            git commit -m "build(audio): 811 clips Piper para banco aprobado 398"
+            git push origin HEAD:qa/piper-audio-398
+          fi
