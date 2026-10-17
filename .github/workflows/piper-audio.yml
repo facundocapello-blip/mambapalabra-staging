@@ -60,5 +60,7 @@ jobs:
             echo "No changes to audio files"
           else
             git commit -m "build(audio): 811 clips Piper V2 con letra directa y ritmo ágil"
+            git fetch origin qa/piper-fast-letter-v2
+            git rebase origin/qa/piper-fast-letter-v2
             git push origin HEAD:qa/piper-fast-letter-v2
           fi
