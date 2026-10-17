@@ -78,7 +78,7 @@ def run(browser_type, label):
         assert clue in answers, f"Definición actual no aprobada: {clue}"
         game.locator("#textAnswer").fill(answers[clue])
         game.locator("#sendTextBtn").click()
-        until(lambda: int(game.locator("#correctMamba").inner_text()) >= 1, 20, "respuesta correcta")
+        until(lambda: int(game.locator("#scoreMamba").inner_text()) >= 1, 20, "respuesta correcta")
         print(f"[{label}] Respuesta correcta y siguiente letra", flush=True)
         assert not [e for e in errors if "Error" in e or "ReferenceError" in e], errors
         page.screenshot(path=str(ARTIFACTS / f"{label}-piper.png"), full_page=True)
