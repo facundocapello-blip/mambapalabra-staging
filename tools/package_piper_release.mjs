@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import JSZip from 'jszip';
 import { applyPatch } from 'diff';
+import { applyVoiceVR1 } from './apply_voice_vr1.mjs';
 
 const SOURCE = 'https://raw.githubusercontent.com/facundocapello-blip/Mambapalabra/8648098/Mambapalabra-B1.13.1-RC1.zip';
 const PATCH_BASE = 'https://raw.githubusercontent.com/facundocapello-blip/mambapalabra-staging/ux/b1131-presenter-iphone/qa/';
@@ -56,7 +57,7 @@ function approvedQuestions(csv) {
 }
 async function main() {
   const manifest = JSON.parse(fs.readFileSync('piper-audio/manifest.json', 'utf8'));
-  if (manifest.approved !== 398 || manifest.clips !== 811 || Object.keys(manifest.entries).length !== 811) throw new Error('Manifiesto incompleto');
+  if (manifest.approved !== 398 || manifest.clips !== 811 || manifest.voice_style !== 'letra-directa-v2' || manifest.length_scale !== 0.90 || Object.keys(manifest.entries).length !== 811) throw new Error('Manifiesto incompleto');
   const [zipBytes, csvText] = await Promise.all([(await get(SOURCE)).arrayBuffer(), (await get(CSV)).text()]);
   if (sha(Buffer.from(zipBytes)) !== '89fa0a512c42d66f58aa29e82e99ce40d62e315fbf314838fd54446e7ba70fcf') throw new Error('ZIP original alterado');
   if (sha(csvText) !== manifest.bank_sha256) throw new Error('Banco y MP3 desincronizados');
@@ -86,7 +87,7 @@ async function main() {
     if (row.letter !== letter || row.answer !== answer || row.definition !== definition || row.rule !== rule || row.question_key !== key || !manifest.entries[key] || !manifest.entries['Incorrecto. Era ' + answer + '.']) throw new Error('Audio desincronizado: ' + answer);
   }
   const portableMap = Object.fromEntries(Object.entries(manifest.entries).map(([key, url]) => {
-    if (!url.startsWith('https://raw.githubusercontent.com/facundocapello-blip/mambapalabra-staging/qa/piper-audio-398/piper-audio/')) throw new Error('URL externa inesperada');
+    if (!url.startsWith('https://raw.githubusercontent.com/facundocapello-blip/mambapalabra-staging/qa/piper-fast-letter-v2/piper-audio/')) throw new Error('URL externa inesperada');
     return [key, 'piper-audio/' + url.split('/').at(-1)];
   }));
   const insertAudio = [
@@ -94,6 +95,7 @@ async function main() {
     'for(const [phrase,url] of Object.entries(PIPER_AUDIO_MAP)){STATIC_AUDIO[phrase]=url;NEW_VOICE_AUDIO.add(url);}',
   ].join('\n');
   html = html.replace(marker, insertBank + '\n' + insertAudio + '\n' + marker);
+  html = applyVoiceVR1(html);
   html = html.replaceAll('/Mambapalabra/new-audio/', 'new-audio/').replaceAll('/Mambapalabra/_cdn/', '_cdn/');
   z.file('index.html', html);
   const hashes = {};
@@ -105,9 +107,9 @@ async function main() {
     z.file(file, bytes);
   }
   if (Object.keys(hashes).length !== 811) throw new Error('811 MP3 requeridos');
-  z.file('PIPER_RELEASE.json', JSON.stringify({base:'B1.13.1-RC1+UX1+BANCO194+ROTATION',approved:398,piper_mp3:811,original_mp3:188,bank_sha256:manifest.bank_sha256,voice:manifest.voice,voice_license:'Apache-2.0',note:'STAGING, no publicar en producción sin QA'},null,2));
+  z.file('PIPER_RELEASE.json', JSON.stringify({base:'B1.13.1-RC1+UX1+BANCO194+ROTATION',approved:398,piper_mp3:811,original_mp3:188,bank_sha256:manifest.bank_sha256,voice:manifest.voice,voice_license:'Apache-2.0',note:'STAGING, no publicar en producción sin QA',version:'B1.13.1-UX1-PIPER398-VR1-LECTURA-V2',voice_response:'VR1 aprobado',voice_style:manifest.voice_style,length_scale:manifest.length_scale},null,2));
   z.file('PIPER_ASSETS_SHA256.json', JSON.stringify(hashes,null,2));
-  const out = 'dist/MAMBAPALABRA_B1.13.1_UX1_PIPER398_STAGING.zip';
+  const out = 'dist/MAMBAPALABRA_B1.13.1_UX1_PIPER398_VR1_LECTURA_V2_STAGING.zip';
   fs.mkdirSync(path.dirname(out),{recursive:true});
   fs.writeFileSync(out,await z.generateAsync({type:'nodebuffer',compression:'DEFLATE',compressionOptions:{level:4}}));
   const check = await JSZip.loadAsync(fs.readFileSync(out));
