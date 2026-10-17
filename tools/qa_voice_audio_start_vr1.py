@@ -50,11 +50,21 @@ with sync_playwright() as p:
               window.__sr.emit(text);
               return start;
             }""",text)
-            f.wait_for_function("""() => {
-              const e=window.__verdictEvents;
-              return e.some(x=>x[1].includes('Cargando audio'))&&
-                     e.some(x=>x[1].includes('Voz del conductor grabada.'));
-            }""",timeout=timeout)
+            try:
+                f.wait_for_function("""() => {
+                  const e=window.__verdictEvents;
+                  return e.some(x=>x[1].includes('Cargando audio'))&&
+                         e.some(x=>x[1].includes('Voz del conductor grabada.'));
+                }""",timeout=timeout)
+            except Exception:
+                print("DEBUG verdict",tag,f.evaluate("""() => ({
+                  events:window.__verdictEvents,voice:document.querySelector('#voiceStatus').textContent,
+                  transcript:document.querySelector('#transcript').textContent,
+                  score:document.querySelector('#scoreMamba').textContent,
+                  phaseMicDisabled:document.querySelector('#micBtn').disabled,
+                  speechButton:document.querySelector('#soundBtn').textContent
+                })"""),"MP3",audio[-8:],"JS errors",errors,flush=True)
+                raise
             events=f.evaluate("window.__verdictEvents")
             started=next(x[0] for x in events if "Voz del conductor grabada." in x[1])
             elapsed=started-t0
