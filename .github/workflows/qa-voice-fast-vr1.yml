@@ -32,3 +32,7 @@ jobs:
           python -m playwright install --with-deps chromium webkit
       - name: Reproduce old issue and test live STAGING VR1
         run: python tools/qa_voice_fast_vr1.py
+      - name: Regression - game flow, Piper audio, pass, correct and incorrect
+        run: python tools/qa_piper_staging.py
+      - name: Regression - word rotation between games
+        run: python tools/qa_randomization_staging.py
