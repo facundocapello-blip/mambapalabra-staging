@@ -1,0 +1,27 @@
+name: VR1 inicio real audio conductor
+on:
+  push:
+    branches: [qa/piper-audio-398]
+    paths:
+      - 'tools/qa_voice_audio_start_vr1.py'
+      - '.github/workflows/qa-voice-audio-start.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-audio-398
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium
+      - name: Measure audio start after voice answer in STAGING
+        run: python tools/qa_voice_audio_start_vr1.py
