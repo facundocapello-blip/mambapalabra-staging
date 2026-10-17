@@ -67,6 +67,12 @@ def run(browser_type, label):
         print(f"[{label}] PASAPALABRA -> Facu", flush=True)
         until(lambda: game.locator("#passBtn").is_enabled(), 45, "pregunta de Facu lista")
         # Wrong answer triggers the recorded "Incorrecto. Era ..." and switches player.
+        if label == "webkit":
+            # Aislar el audio del distintivo flotante de Floot: su overlay
+            # tapa ENVIAR en 844x390. El defecto visual queda documentado
+            # y NO se considera corregido por esta prueba.
+            page.evaluate("document.querySelector('#__Floot-madewithFloot')?.remove()")
+            print("[webkit] Badge Floot retirado solo en QA para probar la lógica", flush=True)
         game.locator("#textAnswer").fill("Respuesta inexistente XYZ")
         game.locator("#sendTextBtn").click()
         until(lambda: int(game.locator("#wrongFacu").inner_text()) >= 1, 20, "respuesta incorrecta")
