@@ -1,0 +1,35 @@
+name: Piper B1.13.1 STAGING browser QA
+on:
+  push:
+    branches:
+      - qa/piper-audio-398
+    paths:
+      - '.github/workflows/qa-piper-staging.yml'
+      - 'tools/qa_piper_staging.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/piper-audio-398
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install open-source browsers
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Verify published STAGING with Chromium and WebKit
+        run: python tools/qa_piper_staging.py
+      - name: Preserve QA screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: piper-qa-browser-screenshots
+          path: artifacts/piper-browser/
+          if-no-files-found: ignore
