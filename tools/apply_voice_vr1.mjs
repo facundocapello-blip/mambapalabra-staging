@@ -1,0 +1,21 @@
+// Reutiliza exactamente el parche VR1 aprobado y probado por el usuario.
+// Fuente: Floot STAGING pages/_index.tsx versión 1792232274745.
+export function applyVoiceVR1(ready){
+  const voiceStart=ready.indexOf('  function startRecognition(){');
+  const voiceEnd=ready.indexOf('  function newGame(',voiceStart);
+  if(voiceStart<0||voiceEnd<0||ready.indexOf('  function startRecognition(){',voiceStart+1)>=0)throw Error('VR1 marker missing');
+  let voice=ready.slice(voiceStart,voiceEnd);
+  const ctxBefore='handled:false,aborted:false};';
+  if(voice.split(ctxBefore).length!==2)throw Error('VR1 context unexpected');
+  voice=voice.replace(ctxBefore,'handled:false,aborted:false,speechEnded:false,lastInterim:""};');
+  const section=(source,start,end,replacement)=>{
+    const from=source.indexOf(start),to=source.indexOf(end,from);
+    if(from<0||to<0||source.indexOf(start,from+1)>=0)throw Error('VR1 section missing '+start);
+    return source.slice(0,from)+replacement+source.slice(to);
+  };
+  voice=section(voice,'    rec.onspeechend=()=>{','    rec.onerror=e=>{',"    // Evaluar al terminar de hablar: aceptar el final al instante o el\n    // último parcial tras una gracia breve, sin reiniciar los relojes.\n    const VOICE_FINAL_GRACE_MS=320,VOICE_EMPTY_RESULT_LIMIT_MS=1500;\n    const commitVoice=text=>{\n      if(!valid()||!text)return;\n      ctx.handled=true;clearTimeout(ctx.finalTimer);\n      if(game.suddenDeath)submitSudden(text,true);\n      else submitAnswer(text,true);\n    };\n    const recognizedCommand=text=>isCorrect(item,text)||[\"pasapalabra\",\"pasa palabra\"].includes(normalize(text));\n    rec.onspeechend=()=>{\n      if(!valid())return;\n      ctx.speechEnded=true;\n      setTurnState(TURN_STATE.VALIDATING);\n      if(ctx.lastInterim&&recognizedCommand(ctx.lastInterim)){\n        commitVoice(ctx.lastInterim);return;\n      }\n      clearTimeout(ctx.finalTimer);\n      ctx.finalTimer=setTimeout(()=>{\n        if(!valid())return;\n        if(ctx.lastInterim)commitVoice(ctx.lastInterim);\n        else{\n          stopRecognition();setTurnState(TURN_STATE.ANSWERING);startTimer(ctx.owner);\n          els.transcript.textContent=\"No llegó el resultado del dictado. Respondé por texto o voz.\";\n        }\n      },ctx.lastInterim?VOICE_FINAL_GRACE_MS:VOICE_EMPTY_RESULT_LIMIT_MS);\n      try{rec.stop();}catch(_){}\n    };\n    rec.onend=()=>{\n      if(!current())return;\n      clearTimeout(ctx.finalTimer);\n      const pending=ctx.speechEnded&&!ctx.aborted&&!ctx.handled?ctx.lastInterim:\"\";\n      recognitionContext=null;markRecognitionEngineIdle();els.mic.textContent=\"RESPONDER\";\n      if(pending){\n        ctx.handled=true;\n        if(game.suddenDeath)submitSudden(pending,true);\n        else submitAnswer(pending,true);\n      }else if(!ctx.aborted&&!ctx.handled)handleRecognitionFailure(ctx);\n    };\n");
+  voice=section(voice,'    rec.onresult=e=>{','    try{rec.start();}',"    rec.onresult=e=>{\n      if(!valid())return;\n      const q=game.suddenDeath?game.suddenQuestion:currentItem();if(!q||(!game.suddenDeath&&q.index!==ctx.itemIndex))return;\n      const finals=[],interims=[];\n      for(let i=0;i<e.results.length;i++){\n        const group=e.results[i];\n        for(let j=0;j<group.length;j++){\n          const t=group[j].transcript.trim();if(t)(group.isFinal?finals:interims).push(t);\n        }\n      }\n      const best=list=>list.find(r=>isCorrect(q,r)||[\"pasapalabra\",\"pasa palabra\"].includes(normalize(r)))||list[0];\n      if(finals.length){commitVoice(best(finals));return;}\n      if(interims.length){\n        ctx.lastInterim=best(interims);\n        if(ctx.speechEnded&&recognizedCommand(ctx.lastInterim))commitVoice(ctx.lastInterim);\n        else{\n          els.transcript.textContent='Escuchando: \"'+ctx.lastInterim+'\"';\n          if(ctx.speechEnded){\n            clearTimeout(ctx.finalTimer);\n            ctx.finalTimer=setTimeout(()=>{if(valid())commitVoice(ctx.lastInterim);},VOICE_FINAL_GRACE_MS);\n          }\n        }\n      }else els.transcript.textContent=\"Escuchando…\";\n    };\n");
+  ready=ready.slice(0,voiceStart)+voice+ready.slice(voiceEnd);
+  if(!ready.includes('VOICE_FINAL_GRACE_MS=320'))throw Error('VR1 patch missing');
+  return ready;
+}
