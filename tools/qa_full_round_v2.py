@@ -30,12 +30,12 @@ with sync_playwright() as p:
             }""")
             f.get_by_role("button",name="Jugar local").click()
             f.locator("#game").wait_for(state="visible",timeout=40000)
-            f.wait_for_function("() => !document.querySelector('#sendTextBtn').disabled",timeout=15000)
+            frame.wait_for_function("() => !document.querySelector('#sendTextBtn').disabled",timeout=15000)
             clue=f.locator("#questionText").inner_text().strip()
             assert clue in answers,clue
             f.locator("#textAnswer").fill(answers[clue])
             f.locator("#sendTextBtn").click()
-            f.wait_for_function("() => +document.querySelector('#scoreMamba').textContent >= 1",timeout=5000)
+            frame.wait_for_function("() => +document.querySelector('#scoreMamba').textContent >= 1",timeout=5000)
             print(f"[{engine_name}] Acierto en flujo completo",flush=True)
             f.locator("#endScreen").wait_for(state="visible",timeout=30000)
             assert "RESULTADO FINAL" in f.locator("#endScreen").inner_text()
@@ -43,7 +43,7 @@ with sync_playwright() as p:
             print(f"[{engine_name}] Fin de tiempo y resultado final",flush=True)
             f.locator("#playAgainBtn").click()
             f.locator("#game").wait_for(state="visible",timeout=25000)
-            f.wait_for_function("() => document.querySelector('#questionText').textContent.trim().length>0",timeout=25000)
+            frame.wait_for_function("() => document.querySelector('#questionText').textContent.trim().length>0",timeout=25000)
             assert f.locator("#scoreMamba").inner_text().strip()=="0"
             print(f"[{engine_name}] Reinicio con marcadores a cero",flush=True)
             assert not errors,errors
