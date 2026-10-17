@@ -20,7 +20,8 @@
 | V2-05 | Inicio, primera definición, correcta, incorrecta, Pasapalabra, cambio de turno | PASÓ — Chromium y WebKit en STAGING |
 | V2-06 | VR1: valoración rápida por voz, transcripción final, no duplicación, reloj pausado en VALIDATING | PASÓ — pruebas de VR1 y reproducción del audio en Chromium; reconocimiento simulado |
 | V2-07 | Rotación de palabras entre partidas, sin repetir antes de agotar ciclo | PASÓ — 5 partidas Chromium + 5 WebKit, rotación distinta |
-| V2-08 | Repetir definición, fin de tiempo, resultado, reinicio y muerte súbita | PENDIENTE |
+| V2-08 | Fin de tiempo, resultado y reinicio desde partida iniciada | PASÓ — Chromium y WebKit, temporizador de 5 s solo en QA |
+| V2-08b | Repetir definición y muerte súbita | PENDIENTE |
 | V2-09 | Online en dos sesiones: sincronización, turno, resultado, revancha | PENDIENTE |
 | V2-10 | Safari iPhone físico: micrófono, volumen, pronunciación, pausas y cronómetros | PENDIENTE |
 
@@ -33,3 +34,5 @@ No declarar que la versión está validada en iPhone físico a partir de WebKit 
 - Contenedor local: `ffprobe` inspeccionó los 811 MP3 del ZIP completo; 811 válidos, 0 corruptos, ~47 minutos en MP3.
 - Navegador del contenedor local bloqueó URL localhost y file:// por política; se usó GitHub Actions con Chromium y WebKit como alternativa. No se considera prueba física de Safari.
 - La versión pública de GitHub Pages sigue intacta.
+
+- [Flujo completo de partida y reinicio](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39039551242): PASÓ en Chromium y WebKit, acierto → agotamiento de ambos relojes → resultado final → reinicio con marcador cero. Temporizador de 5 segundos configurado únicamente en el navegador de prueba.
