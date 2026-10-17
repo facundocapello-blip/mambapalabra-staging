@@ -38,8 +38,8 @@ with sync_playwright() as p:
         f.evaluate("""() => {
           window.__verdictEvents=[];
           new MutationObserver(()=>{
-            window.__verdictEvents.push([performance.now(),document.querySelector('#voiceStatus').textContent]);
-          }).observe(document.querySelector('#voiceStatus'),{childList:true,characterData:true,subtree:true});
+            window.__verdictEvents.push([performance.now(),document.querySelector('#voiceNote').textContent]);
+          }).observe(document.querySelector('#voiceNote'),{childList:true,characterData:true,subtree:true});
         }""")
         def say(text,tag,timeout=15000):
             f.locator("#micBtn").click()
@@ -58,7 +58,7 @@ with sync_playwright() as p:
                 }""",timeout=timeout)
             except Exception:
                 print("DEBUG verdict",tag,f.evaluate("""() => ({
-                  events:window.__verdictEvents,voice:document.querySelector('#voiceStatus').textContent,
+                  events:window.__verdictEvents,voice:document.querySelector('#voiceNote').textContent,
                   transcript:document.querySelector('#transcript').textContent,
                   score:document.querySelector('#scoreMamba').textContent,
                   phaseMicDisabled:document.querySelector('#micBtn').disabled,
