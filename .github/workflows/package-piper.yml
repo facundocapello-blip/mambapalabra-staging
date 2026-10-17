@@ -5,6 +5,7 @@ on:
       - qa/piper-fast-letter-v2
     paths:
       - 'piper-audio/manifest.json'
+      - '.github/workflows/package-piper.yml'
   workflow_dispatch:
 permissions:
   contents: read
