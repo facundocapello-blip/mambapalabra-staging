@@ -22,6 +22,8 @@ jobs:
           node-version: '22'
       - name: Install free JSZIP/diff dependencies
         run: npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+      - name: Install ffprobe for audio duration QA
+        run: command -v ffprobe || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
       - name: Verify 27 letters, direct pronunciation and faster MP3
         run: python3 tools/qa_piper_fast_v2.py
       - name: Build full verified Piper VR1 V2 release ZIP
