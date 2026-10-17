@@ -17,12 +17,15 @@ assert manifest["approved"] == 398 and manifest["clips"] == 811
 assert len(manifest["entries"]) == 811
 answers = {r["definition"]: r["answer"] for r in manifest["rows"]}
 
-def until(check, seconds=35, label="condition"):
+def until(check, seconds=35, label="condition", pump=None):
     deadline = time.monotonic() + seconds
     while time.monotonic() < deadline:
         if check():
             return
-        time.sleep(.3)
+        if pump is not None:
+            pump.wait_for_timeout(300)  # procesa los eventos de red de Playwright
+        else:
+            time.sleep(.3)
     raise AssertionError(f"Timeout waiting for {label}")
 
 def run(browser_type, label):
@@ -54,7 +57,7 @@ def run(browser_type, label):
         first = game.locator("#questionText").inner_text().strip()
         assert first in answers, f"Definición no aprobada: {first}"
         print(f"[{label}] Primera definición: {first[:60]}", flush=True)
-        until(lambda: any(status == 200 and "/q" in url for url, status in audio_responses), 40, "audio de definición HTTP 200")
+        until(lambda: any(status == 200 and "/q" in url for url, status in audio_responses), 40, "audio de definición HTTP 200", pump=page)
         print(f"[{label}] Audio Piper de pregunta HTTP 200", flush=True)
         game.locator("#passBtn").wait_for(state="visible", timeout=20000)
         until(lambda: game.locator("#passBtn").is_enabled(), 45, "estado ANSWERING / PASAPALABRA")
@@ -67,7 +70,7 @@ def run(browser_type, label):
         game.locator("#textAnswer").fill("Respuesta inexistente XYZ")
         game.locator("#sendTextBtn").click()
         until(lambda: int(game.locator("#wrongFacu").inner_text()) >= 1, 20, "respuesta incorrecta")
-        until(lambda: any(status == 200 and "/w" in url for url, status in audio_responses), 40, "audio incorrecto HTTP 200")
+        until(lambda: any(status == 200 and "/w" in url for url, status in audio_responses), 40, "audio incorrecto HTTP 200", pump=page)
         print(f"[{label}] Respuesta incorrecta + audio Piper HTTP 200", flush=True)
         until(lambda: game.locator("#activeName").inner_text().strip() == "Mamba", 25, "regreso a Mamba")
         until(lambda: game.locator("#passBtn").is_enabled(), 45, "pregunta Mamba lista")
