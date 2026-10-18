@@ -1,0 +1,33 @@
+name: Casting voces rioplatenses neuronales V4
+on:
+  push:
+    branches: [qa/voice-casting-argentine-v4]
+    paths:
+      - 'tools/voice_casting_argentine_v4.py'
+      - '.github/workflows/voice-casting-argentine-v4.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/voice-casting-argentine-v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install voice and audio tools
+        run: |
+          python -m pip install edge-tts==7.2.7
+          command -v ffprobe || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg; }
+      - name: Generate four voices with two matching samples
+        run: python tools/voice_casting_argentine_v4.py
+      - name: Publish casting audio
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mambapalabra-voces-rioplatenses-V4
+          path: voice-casting-argentine-v4/
+          retention-days: 30
