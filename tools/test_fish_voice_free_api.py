@@ -11,9 +11,13 @@ VOICE_ID = "c4a325176443465ab0ba1b0cfa979995"
 MODEL = "s2.1-pro-free"
 OUT = Path("artifacts/fish-voice-free-test")
 SAMPLES = {
-    "01_definicion": "Empieza con A: Montaña más alta de América, ubicada en la cordillera de los Andes.",
-    "02_correcto": "Correcto. Seguimos con la siguiente letra.",
-    "03_incorrecto": "Incorrecto. Era Rodaje.",
+    "01_definicion_A": "A. Montaña más alta de América, ubicada en la cordillera de los Andes.",
+    "02_contiene_ENIE": "Contiene la eñe. Acción de enseñar o transmitir conocimientos.",
+    "03_intro_inicio": "Bienvenidos a Mambapalabra. Veintisiete letras, un desafío. ¿Estás listo para jugar?",
+    "04_intro_solo": "El rosco está preparado. Concentración, que empieza el desafío. ¡Vamos con la A!",
+    "05_intro_online": "¡Ya están los dos jugadores! El duelo está por comenzar. Dos participantes, veintisiete letras y un solo ganador. ¡Que comience Mambapalabra!",
+    "06_correcto": "Correcto. Seguimos con la siguiente letra.",
+    "07_incorrecto": "Incorrecto. Era Rodaje.",
 }
 
 def generate(name, text, api_key):
