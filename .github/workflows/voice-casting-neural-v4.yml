@@ -1,0 +1,36 @@
+name: Casting neural masculino V4 - muestras
+on:
+  push:
+    branches: [qa/voice-casting-neural-v4]
+    paths:
+      - 'tools/voice_casting_neural_v4.py'
+      - '.github/workflows/voice-casting-neural-v4.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/voice-casting-neural-v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install neural TTS client
+        run: pip install edge-tts==7.2.7
+      - name: Generate six samples
+        run: python tools/voice_casting_neural_v4.py
+      - name: Check MP3 decodes
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          for f in voice-casting-neural-v4/*.mp3; do ffmpeg -v error -i "$f" -f null - || exit 1; done
+          test "$(find voice-casting-neural-v4 -name '*.mp3' | wc -l)" -eq 6
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mambapalabra-neural-masculinas-V4
+          path: voice-casting-neural-v4/
+          retention-days: 30
