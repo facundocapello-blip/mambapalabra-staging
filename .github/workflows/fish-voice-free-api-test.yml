@@ -23,7 +23,7 @@ jobs:
         run: |
           if [ -z "$FISH_API_KEY" ]; then echo 'FISH_API_KEY secret missing'; exit 2; fi
           echo 'FISH_API_KEY configured'
-      - name: Generate three MP3 samples using free Fish model
+      - name: Generate seven MP3 samples using free Fish model
         env:
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
         run: python tools/test_fish_voice_free_api.py
@@ -33,7 +33,7 @@ jobs:
           sudo apt-get install -y -qq ffmpeg
       - name: Validate MP3 decoding and count
         run: |
-          test "$(find artifacts/fish-voice-free-test -name '*.mp3' | wc -l)" -eq 3
+          test "$(find artifacts/fish-voice-free-test -name '*.mp3' | wc -l)" -eq 7
           for f in artifacts/fish-voice-free-test/*.mp3; do
             ffprobe -v error -show_entries format=duration -of default=nw=1 "$f"
             ffmpeg -v error -i "$f" -f null - || exit 1
