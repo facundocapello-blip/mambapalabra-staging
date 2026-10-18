@@ -45,7 +45,7 @@ def generate(name, text, api_key):
         raise RuntimeError(f"Fish API returned HTTP {exc.code} for {name}") from None
     except urllib.error.URLError as exc:
         raise RuntimeError(f"Network connection failed for {name}: {type(exc.reason).__name__}") from None
-    if len(audio) < 1000 or not (audio.startswith(b"ID3") or audio[:2] in (b"\\xff\\xfb", b"\\xff\\xf3", b"\\xff\\xf2")):
+    if len(audio) < 1000 or not (audio.startswith(b"ID3") or (len(audio) > 2 and audio[0] == 255 and (audio[1] & 224) == 224)):
         raise RuntimeError(f"Unexpected audio response for {name}; size={len(audio)}, type={content_type.split(';')[0]}")
     path = OUT / f"{name}.mp3"
     path.write_bytes(audio)
