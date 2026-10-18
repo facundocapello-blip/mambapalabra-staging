@@ -1,0 +1,52 @@
+name: Casting voces masculinas V3 (solo muestras)
+on:
+  push:
+    branches: [qa/voice-casting-male-v3]
+    paths:
+      - 'tools/voice_casting_male_v3.py'
+      - '.github/workflows/voice-casting-male-v3.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  samples:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: qa/voice-casting-male-v3
+      - name: Install offline Piper
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/mamba-piper/models
+          curl -fLsS --retry 3 -o /tmp/mamba-piper/piper.tar.gz https://github.com/rhasspy/piper/releases/download/2023.11.14-2/piper_linux_x86_64.tar.gz
+          tar -xzf /tmp/mamba-piper/piper.tar.gz -C /tmp/mamba-piper
+          command -v ffmpeg
+          command -v ffprobe
+          for spec in \
+            "es/es_ES/davefx/medium/es_ES-davefx-medium" \
+            "es/es_ES/sharvard/medium/es_ES-sharvard-medium" \
+            "es/es_MX/ald/medium/es_MX-ald-medium"
+          do
+            name="$(basename "$spec")"
+            for ext in onnx onnx.json
+            do
+              curl -fLsS --retry 3 -o "/tmp/mamba-piper/models/$name.$ext" "https://huggingface.co/rhasspy/piper-voices/resolve/main/$spec.$ext"
+            done
+          done
+          /tmp/mamba-piper/piper/piper --help >/dev/null
+      - name: Generate 3 comparable voices with 2 phrases each
+        shell: bash
+        run: |
+          set -euo pipefail
+          export LD_LIBRARY_PATH=/tmp/mamba-piper/piper
+          python3 tools/voice_casting_male_v3.py
+          test "$(find voice-casting-v3 -name '*.mp3' | wc -l)" -eq 6
+      - name: Publish samples artifact only
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mambapalabra-3-voces-masculinas-V3
+          path: voice-casting-v3/
+          retention-days: 30
