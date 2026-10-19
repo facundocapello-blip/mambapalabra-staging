@@ -71,11 +71,12 @@ with sync_playwright() as p:
   page.wait_for_function('document.querySelector("#wrongFacu").textContent==="1"',timeout=7000)
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   count=page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')
-  solo=page.evaluate('window.__fishLoads.filter(x=>x.includes("04_intro_solo.mp3")).length')
   page.on('dialog',lambda dialog:dialog.accept())
   page.locator('summary[aria-label="Opciones"]').click()
   page.locator('#restartBtn').click()
-  page.wait_for_function(f'window.__fishLoads.filter(x=>x.includes("04_intro_solo.mp3")).length>{solo}',timeout=12000)
+  page.wait_for_function('document.querySelector("#scoreMamba").textContent==="0"&&document.querySelector("#wrongFacu").textContent==="0"&&document.querySelector("#micBtn").disabled',timeout=5000)
+  page.wait_for_timeout(80)
+  assert page.locator("#timer1").inner_text()=="02:30"
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   assert page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')==count
   assert not errors,errors
