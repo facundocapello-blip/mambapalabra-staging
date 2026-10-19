@@ -17,7 +17,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Install FFmpeg and ffprobe before audio generation\n        run: |\n          sudo apt-get update -qq\n          sudo apt-get install -y -qq ffmpeg\n          command -v ffprobe\n      - name: Generate first 12 approved definitions (24 clips), free model only
+      - name: Install FFmpeg and ffprobe before audio generation
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          command -v ffprobe
+      - name: Generate first 12 approved definitions (24 clips), free model only
         env:
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
         run: python tools/generate_fish_bank.py --start 1 --count 12 --max-requests 24
