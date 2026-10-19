@@ -1,0 +1,49 @@
+name: Fish full-bank packaging dry-run (NO Fish API)
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/qa_fish_full_fixture.py'
+      - 'tools/package_fish_bank_staging.py'
+      - '.github/workflows/qa-fish-full-dryrun.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  dryrun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install packaging and browser QA dependencies
+        run: |
+          npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Rebuild verified Piper V2 baseline
+        run: node tools/package_piper_release.mjs
+      - name: Reuse Fish intro casting
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Voice-Free-Casting
+          run-id: 39169945032
+          github-token: ${{ github.token }}
+          path: fish-casting
+      - name: Build intro overlay and 811-entry fixture
+        run: |
+          python tools/package_fish_intro_staging.py
+          python tools/qa_fish_full_fixture.py
+      - name: Validate full package with fixture (never publish)
+        env:
+          FISH_PACKAGE_TEST_FIXTURE: '1'
+          QA_FISH_FULL: '1'
+        run: |
+          python tools/package_fish_bank_staging.py
+          python tools/qa_fish_intro_staging.py
