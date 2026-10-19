@@ -49,8 +49,9 @@ with sync_playwright() as p:
   assert state=={"disabled":True,"time":"02:30"},state
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=20000)
   assert page.evaluate('window.__fishLoads.some(x=>x.includes("piper-audio/"))')
-  first=page.evaluate('currentItem().answer')
-  assert first
+  clue=page.locator('#questionText').inner_text().strip()
+  assert clue in answers,clue
+  first=answers[clue]
   page.locator("#textAnswer").fill(first)
   page.locator("#sendTextBtn").click()
   page.wait_for_function('window.__fishLoads.some(x=>x.includes("06_correcto.mp3"))',timeout=12000)
