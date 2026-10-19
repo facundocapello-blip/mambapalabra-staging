@@ -55,7 +55,7 @@ with sync_playwright() as p:
   first=answers[clue]
   page.locator("#textAnswer").fill(first)
   page.locator("#sendTextBtn").click()
-  page.wait_for_function('window.__fishLoads.some(x=>x.includes("06_correcto.mp3"))',timeout=12000)
+  page.wait_for_function('window.__fishLoads.some(x=>x.includes("fish-bank/fixed01.mp3"))' if full_fish else 'window.__fishLoads.some(x=>x.includes("06_correcto.mp3"))',timeout=12000)
   page.wait_for_function('!document.querySelector("#micBtn").disabled&&document.querySelector("#scoreMamba").textContent==="1"',timeout=15000)
   # Repeat: direct handler invocation because original V2 hides the recovery button in normal play.
   page.evaluate('document.querySelector("#repeatBtn").click()')
