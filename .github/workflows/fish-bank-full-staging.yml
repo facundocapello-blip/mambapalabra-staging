@@ -1,5 +1,9 @@
 name: Fish Audio - full 398 bank (STAGING)
 on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - '.github/workflows/fish-bank-full-staging.yml'
   workflow_dispatch:
 permissions:
   contents: read
