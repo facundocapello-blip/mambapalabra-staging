@@ -4,6 +4,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 import hashlib
 import json
+import os
 import sys
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 from generate_fish_bank import all_jobs, EXPECTED_SHA, MODEL, VOICE_ID
@@ -15,6 +16,7 @@ VERSION="B1.13.1-UX1-FISH398-VOZ-UNICA-RC2-STAGING"
 original=json.loads(Path("piper-audio/manifest.json").read_text())
 expected=all_jobs(original)
 casting=json.loads((BANK/"manifest.json").read_text())
+assert not casting.get("fixture_only") or os.getenv("FISH_PACKAGE_TEST_FIXTURE")=="1", "Refusing fixture audio in real package"
 assert casting["model"]==MODEL and casting["voice_id"]==VOICE_ID
 assert casting["source_bank_sha256"]==EXPECTED_SHA
 clips=casting["clips"]
