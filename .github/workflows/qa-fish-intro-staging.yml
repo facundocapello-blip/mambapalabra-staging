@@ -1,0 +1,48 @@
+name: Fish voces e intros - STAGING QA
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/package_fish_intro_staging.py'
+      - 'tools/qa_fish_intro_staging.py'
+      - '.github/workflows/qa-fish-intro-staging.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  package-and-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install dependencies
+        run: |
+          npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Rebuild verified Piper V2 baseline
+        run: node tools/package_piper_release.mjs
+      - name: Download seven generated Fish samples from verified workflow
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Voice-Free-Casting
+          run-id: 39169945032
+          github-token: ${{ github.token }}
+          path: fish-casting
+      - name: Build Fish intro staging ZIP
+        run: python tools/package_fish_intro_staging.py
+      - name: Check browser gameplay and audio timing (Chromium and WebKit)
+        run: python tools/qa_fish_intro_staging.py
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: MAMBAPALABRA_FISH_INTROS_RC1_STAGING_QA
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip
+          retention-days: 30
