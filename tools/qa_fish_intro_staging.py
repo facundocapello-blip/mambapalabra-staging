@@ -8,7 +8,10 @@ from playwright.sync_api import sync_playwright
 zip_path=Path("dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip")
 site=Path("dist/fish-qa-site")
 site.mkdir(parents=True,exist_ok=True)
-with ZipFile(zip_path) as z:\n z.extractall(site)\n manifest=json.loads(z.read("piper-audio/manifest.json"))\n answers={x["definition"]:x["answer"] for x in manifest["rows"]}
+with ZipFile(zip_path) as z:
+ z.extractall(site)
+ manifest=json.loads(z.read("piper-audio/manifest.json"))
+ answers={x["definition"]:x["answer"] for x in manifest["rows"]}
 os.chdir(site)
 server=http.server.ThreadingHTTPServer(("127.0.0.1",0),http.server.SimpleHTTPRequestHandler)
 threading.Thread(target=server.serve_forever,daemon=True).start()
