@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Generate first 12 approved definitions (24 clips), free model only
+      - name: Install FFmpeg and ffprobe before audio generation\n        run: |\n          sudo apt-get update -qq\n          sudo apt-get install -y -qq ffmpeg\n          command -v ffprobe\n      - name: Generate first 12 approved definitions (24 clips), free model only
         env:
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
         run: python tools/generate_fish_bank.py --start 1 --count 12 --max-requests 24
@@ -40,7 +40,7 @@ jobs:
             ffmpeg -v error -i "$f" -f null - || exit 1
           done
       - uses: actions/upload-artifact@v4
-        if: success()
+        if: always()
         with:
           name: Mambapalabra-Fish-Bank-Pilot-24
           path: artifacts/fish-bank/
