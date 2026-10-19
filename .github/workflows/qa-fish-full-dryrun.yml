@@ -4,6 +4,7 @@ on:
     branches: [qa/fish-voice-free-api-test]
     paths:
       - 'tools/qa_fish_full_fixture.py'
+      - 'tools/qa_fish_intro_staging.py'
       - 'tools/package_fish_bank_staging.py'
       - '.github/workflows/qa-fish-full-dryrun.yml'
   workflow_dispatch:
