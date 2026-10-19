@@ -10,7 +10,7 @@ site=Path("dist/fish-qa-site")
 site.mkdir(parents=True,exist_ok=True)
 with ZipFile(zip_path) as z:
  z.extractall(site)
- manifest=json.loads(z.read("piper-audio/manifest.json"))
+ manifest=json.loads(Path("piper-audio/manifest.json").read_text())
  answers={x["definition"]:x["answer"] for x in manifest["rows"]}
 os.chdir(site)
 server=http.server.ThreadingHTTPServer(("127.0.0.1",0),http.server.SimpleHTTPRequestHandler)
