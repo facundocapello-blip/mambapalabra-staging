@@ -20,7 +20,7 @@ url=f"http://127.0.0.1:{server.server_address[1]}/"
 MOCK=r"""(() => {
 window.__fishLoads=[];
 const originalFetch=window.fetch.bind(window);
-window.fetch=(input,...args)=>{const path=typeof input==="string"?input:input?.url||"";if(path.includes("fish-audio/")||path.includes("piper-audio/"))window.__fishLoads.push(path);return originalFetch(input,...args)};
+window.fetch=(input,...args)=>{const path=typeof input==="string"?input:input?.url||"";if(path.includes("fish-audio/")||path.includes("fish-bank/")||path.includes("piper-audio/"))window.__fishLoads.push(path);return originalFetch(input,...args)};
 class MockAudio {
  constructor(){this._src="";this.volume=1;this.playbackRate=1;this.currentTime=0;this.duration=1;this.paused=true;this.onplaying=null;this.onended=null;this.onerror=null;this._timer=null;}
  set src(v){this._src=v;this.currentTime=0;}
