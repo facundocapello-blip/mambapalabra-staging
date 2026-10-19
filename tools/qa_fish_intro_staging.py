@@ -73,7 +73,7 @@ with sync_playwright() as p:
   count=page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')
   solo=page.evaluate('window.__fishLoads.filter(x=>x.includes("04_intro_solo.mp3")).length')
   page.on('dialog',lambda dialog:dialog.accept())
-  page.evaluate('document.querySelector("#restartBtn").click()')
+  page.locator('summary[aria-label="Opciones"]').click()\n  page.locator('#restartBtn').click()
   page.wait_for_function(f'window.__fishLoads.filter(x=>x.includes("04_intro_solo.mp3")).length>{solo}',timeout=12000)
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   assert page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')==count
