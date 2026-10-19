@@ -1,6 +1,9 @@
 name: Deploy B1.13.1 UX1 to isolated Pages
 on:
   workflow_dispatch:
+  push:
+    branches: [ux/b1131-presenter-iphone]
+    paths: ['.github/workflows/deploy-b1131-ux1-pages.yml']
 permissions:
   contents: read
   pages: write
