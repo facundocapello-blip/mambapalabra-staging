@@ -1,0 +1,92 @@
+name: Fish Audio - full 398 bank (STAGING)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: fish-full-bank-staging
+  cancel-in-progress: false
+jobs:
+  full-bank:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg and browser test dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Reuse 24 verified pilot clips
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Bank-Pilot-24
+          run-id: 39199728069
+          github-token: ${{ github.token }}
+          path: artifacts/fish-bank
+      - name: Generate missing approved definitions and 15 fixed clips (811 total)
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: python tools/generate_fish_bank.py --start 1 --count 398 --all --max-requests 811
+      - name: Preserve generated bank for resumption, including on failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Bank-811-Partial-Or-Complete
+          path: artifacts/fish-bank/
+          if-no-files-found: ignore
+          retention-days: 30
+      - name: Validate 811 MP3 decoders and approved phrase mapping
+        run: |
+          python - <<'PY'
+          import json,hashlib,subprocess
+          from pathlib import Path
+          from sys import path
+          path.insert(0,'tools')
+          from generate_fish_bank import all_jobs
+          source=json.loads(Path('piper-audio/manifest.json').read_text())
+          m=json.loads(Path('artifacts/fish-bank/manifest.json').read_text())
+          jobs=all_jobs(source)
+          assert len(m['clips'])==811 and m['model']=='s2.1-pro-free'
+          assert len(set(x['file'] for x in m['clips']))==811
+          actual={x['file']:x for x in m['clips']}
+          for filename,text,phrase in jobs:
+            clip=actual[filename]
+            assert clip['phrase']==phrase and clip['text']==text
+            p=Path('artifacts/fish-bank')/filename
+            assert hashlib.sha256(p.read_bytes()).hexdigest()==clip['sha256']
+            subprocess.run(['ffmpeg','-v','error','-i',str(p),'-f','null','-'],check=True,timeout=20)
+          print('PASS: all 811 MP3 files decoded and matched approved phrases')
+          PY
+      - name: Rebuild approved Piper V2 baseline
+        run: node tools/package_piper_release.mjs
+      - name: Reuse validated Fish intro casting
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Voice-Free-Casting
+          run-id: 39169945032
+          github-token: ${{ github.token }}
+          path: fish-casting
+      - name: Package Fish intro and complete single-voice staging
+        run: |
+          python tools/package_fish_intro_staging.py
+          python tools/package_fish_bank_staging.py
+      - name: Chromium and WebKit gameplay regression
+        env:
+          QA_FISH_FULL: '1'
+        run: python tools/qa_fish_intro_staging.py
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC2_STAGING
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC2_STAGING.zip
+          retention-days: 30
