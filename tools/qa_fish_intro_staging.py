@@ -5,7 +5,8 @@ from zipfile import ZipFile
 import http.server, threading, json, os
 from playwright.sync_api import sync_playwright
 
-zip_path=Path("dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip")
+full_fish=os.getenv("QA_FISH_FULL")=="1"
+zip_path=Path("dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC2_STAGING.zip" if full_fish else "dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip")
 site=Path("dist/fish-qa-site")
 site.mkdir(parents=True,exist_ok=True)
 with ZipFile(zip_path) as z:
@@ -48,7 +49,7 @@ with sync_playwright() as p:
   state=page.evaluate('({disabled:document.querySelector("#micBtn").disabled,time:document.querySelector("#timer1").textContent})')
   assert state=={"disabled":True,"time":"02:30"},state
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=20000)
-  assert page.evaluate('window.__fishLoads.some(x=>x.includes("piper-audio/"))')
+  assert page.evaluate('window.__fishLoads.some(x=>x.includes("fish-bank/"))' if full_fish else 'window.__fishLoads.some(x=>x.includes("piper-audio/"))')
   clue=page.locator('#questionText').inner_text().strip()
   assert clue in answers,clue
   first=answers[clue]
@@ -79,6 +80,7 @@ with sync_playwright() as p:
   assert page.locator("#timer1").inner_text()=="02:30"
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   assert page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')==count
+  if full_fish:assert not page.evaluate('window.__fishLoads.some(x=>x.includes("piper-audio/"))'),"Unexpected mixed Piper voice"
   assert not errors,errors
   print(f"{name} PASS: intro/clock/first clue/correct/repeat/pass/wrong/restart; loads={page.evaluate('window.__fishLoads.length')}",flush=True)
   context.close()
