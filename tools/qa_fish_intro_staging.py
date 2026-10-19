@@ -42,11 +42,11 @@ with sync_playwright() as p:
   page.goto(url,wait_until="domcontentloaded",timeout=60000)
   page.locator("#startBtn").click()
   page.wait_for_function('window.__fishLoads.some(x=>x.includes("03_intro_inicio.mp3"))',timeout=15000)
-  state=page.evaluate('({turn:game.turnState,time:game.players[0].timeMs})')
-  assert state=={"turn":"SWITCHING","time":150000},state
+  state=page.evaluate('({disabled:document.querySelector("#micBtn").disabled,time:document.querySelector("#timer1").textContent})')
+  assert state=={"disabled":True,"time":"02:30"},state
   page.wait_for_function('window.__fishLoads.some(x=>x.includes("04_intro_solo.mp3"))',timeout=15000)
-  state=page.evaluate('({turn:game.turnState,time:game.players[0].timeMs})')
-  assert state=={"turn":"SWITCHING","time":150000},state
+  state=page.evaluate('({disabled:document.querySelector("#micBtn").disabled,time:document.querySelector("#timer1").textContent})')
+  assert state=={"disabled":True,"time":"02:30"},state
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=20000)
   assert page.evaluate('window.__fishLoads.some(x=>x.includes("piper-audio/"))')
   first=page.evaluate('currentItem().answer')
@@ -57,10 +57,10 @@ with sync_playwright() as p:
   page.wait_for_function('!document.querySelector("#micBtn").disabled&&document.querySelector("#scoreMamba").textContent==="1"',timeout=15000)
   # Repeat: direct handler invocation because original V2 hides the recovery button in normal play.
   page.evaluate('document.querySelector("#repeatBtn").click()')
-  page.wait_for_function('game.turnState==="READING"',timeout=4000)
-  before=page.evaluate('game.players[0].timeMs')
+  page.wait_for_function('document.querySelector("#micBtn").disabled',timeout=4000)
+  before=page.locator('#timer1').inner_text()
   page.wait_for_timeout(80)
-  after=page.evaluate('game.players[0].timeMs')
+  after=page.locator('#timer1').inner_text()
   assert before==after,(before,after)
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=12000)
   page.locator("#passBtn").click()
@@ -74,7 +74,7 @@ with sync_playwright() as p:
   page.on('dialog',lambda dialog:dialog.accept())
   page.evaluate('document.querySelector("#restartBtn").click()')
   page.wait_for_function(f'window.__fishLoads.filter(x=>x.includes("04_intro_solo.mp3")).length>{solo}',timeout=12000)
-  page.wait_for_function('game.turnState==="ANSWERING"',timeout=15000)
+  page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   assert page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')==count
   assert not errors,errors
   print(f"{name} PASS: intro/clock/first clue/correct/repeat/pass/wrong/restart; loads={page.evaluate('window.__fishLoads.length')}",flush=True)
