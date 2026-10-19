@@ -1,0 +1,47 @@
+name: Fish Audio - approved bank pilot (STAGING)
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/generate_fish_bank.py'
+      - '.github/workflows/fish-bank-pilot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  generate-pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate first 12 approved definitions (24 clips), free model only
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: python tools/generate_fish_bank.py --start 1 --count 12 --max-requests 24
+      - name: Validate each MP3 and exact phrase coverage
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          m=json.loads(Path('artifacts/fish-bank/manifest.json').read_text())
+          assert m['count']==12 and len(m['clips'])==24
+          assert m['model']=='s2.1-pro-free'
+          assert len(set(c['phrase'] for c in m['clips']))==24
+          for c in m['clips']:
+              p=Path('artifacts/fish-bank')/c['file']
+              assert p.is_file() and p.stat().st_size>1000
+          print('Verified 24 Fish clips and original phrase keys')
+          PY
+          for f in artifacts/fish-bank/*.mp3; do
+            ffprobe -v error -show_entries format=duration -of default=nw=1 "$f"
+            ffmpeg -v error -i "$f" -f null - || exit 1
+          done
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: Mambapalabra-Fish-Bank-Pilot-24
+          path: artifacts/fish-bank/
+          retention-days: 30
