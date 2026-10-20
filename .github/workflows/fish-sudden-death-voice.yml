@@ -30,6 +30,7 @@ jobs:
           import test_fish_voice_free_api as fish
           assert fish.MODEL=='s2.1-pro-free'
           fish.OUT=fish.Path('fish-extra')
+          fish.OUT.mkdir(parents=True,exist_ok=True)
           fish.generate('08_muerte_subita','Empate. Vamos a muerte súbita.',__import__('os').environ['FISH_API_KEY'])
           PY
           ffprobe -v error -show_entries format=duration -of default=nw=1 fish-extra/08_muerte_subita.mp3
