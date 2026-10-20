@@ -1,0 +1,25 @@
+name: Fish RC3 live GitHub Pages browser smoke
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/qa_fish_live_pages.py'
+      - '.github/workflows/qa-fish-live-pages.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-pages-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and WebKit
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Verify live HTTPS deployment and real MP3 fetches
+        run: python tools/qa_fish_live_pages.py
