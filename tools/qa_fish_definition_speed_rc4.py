@@ -14,16 +14,18 @@ with ZipFile(PACKAGE) as z:z.extractall(SITE)
 
 MOCK=r'''(() => {
 window.__rates=[];window.__fishLoads=[];window.__deviceTTSCalls=0;
+window.__blobPaths=new WeakMap();window.__urlPaths=new Map();
 if(window.speechSynthesis){window.speechSynthesis.speak=()=>{window.__deviceTTSCalls++}}
-const originalFetch=window.fetch.bind(window);
-window.fetch=(input,...args)=>{const path=typeof input==="string"?input:input?.url||"";if(path.includes("fish-audio/")||path.includes("fish-bank/")||path.includes("piper-audio/"))window.__fishLoads.push(path);return originalFetch(input,...args)};
+const originalFetch=window.fetch.bind(window),originalObjectURL=URL.createObjectURL.bind(URL);
+window.fetch=async(input,...args)=>{const path=typeof input==="string"?input:input?.url||"";if(path.includes("fish-audio/")||path.includes("fish-bank/")||path.includes("piper-audio/"))window.__fishLoads.push(path);const response=await originalFetch(input,...args);const originalBlob=response.blob.bind(response);response.blob=async()=>{const blob=await originalBlob();window.__blobPaths.set(blob,path);return blob;};return response;};
+URL.createObjectURL=blob=>{const url=originalObjectURL(blob);window.__urlPaths.set(url,window.__blobPaths.get(blob)||"");return url;};
 class MockAudio {
  constructor(){this._src="";this.volume=1;this.playbackRate=1;this.currentTime=0;this.duration=1;this.paused=true;this.onplaying=null;this.onended=null;this.onerror=null;this._timer=null;this.preservesPitch=true;}
  set src(v){this._src=v;this.currentTime=0;}
  get src(){return this._src;}
  setAttribute(){}
  pause(){this.paused=true;clearTimeout(this._timer)}
- play(){window.__rates.push({src:this.src,rate:this.playbackRate,pitch:this.preservesPitch});this.paused=false;setTimeout(()=>{if(!this.paused&&this.onplaying)this.onplaying()},8);clearTimeout(this._timer);this._timer=setTimeout(()=>{if(!this.paused){this.currentTime=this.duration;if(this.onended)this.onended()}},110);return Promise.resolve()}
+ play(){window.__rates.push({path:window.__urlPaths.get(this.src)||this.src,rate:this.playbackRate,pitch:this.preservesPitch});this.paused=false;setTimeout(()=>{if(!this.paused&&this.onplaying)this.onplaying()},8);clearTimeout(this._timer);this._timer=setTimeout(()=>{if(!this.paused){this.currentTime=this.duration;if(this.onended)this.onended()}},110);return Promise.resolve()}
 }
 window.Audio=MockAudio;
 })();'''
@@ -46,21 +48,21 @@ with sync_playwright() as p:
   page.add_init_script(MOCK)
   page.goto(BASE,wait_until='domcontentloaded',timeout=30000)
   page.locator('#startBtn').click()
-  page.wait_for_function('window.__rates.some(x=>/fish-bank\/q\d{4}\.mp3/.test(x.src))',timeout=15000)
+  page.wait_for_function('window.__rates.some(x=>/fish-bank\/q\d{4}\.mp3/.test(x.path))',timeout=15000)
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   rates=page.evaluate('window.__rates')
-  intros=[r for r in rates if 'fish-audio/0' in r['src']]
-  questions=[r for r in rates if 'fish-bank/q' in r['src']]
+  intros=[r for r in rates if 'fish-audio/0' in r['path']]
+  questions=[r for r in rates if 'fish-bank/q' in r['path']]
   assert intros and questions,rates
   assert all(abs(r['rate']-.92)<.00001 for r in intros),intros
   assert all(abs(r['rate']-(.92*1.08))<.00001 and r['pitch'] for r in questions),questions
   assert page.locator('#timer1').inner_text()=='02:30'
   page.locator('#textAnswer').fill('QA_RESPUESTA_INVALIDA_12345')
   page.locator('#sendTextBtn').click()
-  page.wait_for_function('window.__rates.some(x=>/fish-bank\/w\d{4}\.mp3/.test(x.src))',timeout=15000)
+  page.wait_for_function('window.__rates.some(x=>/fish-bank\/w\d{4}\.mp3/.test(x.path))',timeout=15000)
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   rates=page.evaluate('window.__rates')
-  wrong=[r for r in rates if 'fish-bank/w' in r['src']]
+  wrong=[r for r in rates if 'fish-bank/w' in r['path']]
   assert wrong and all(abs(r['rate']-.92)<.00001 for r in wrong),wrong
   page.evaluate('document.querySelector("#repeatBtn").click()')
   page.wait_for_function('document.querySelector("#micBtn").disabled',timeout=3000)
