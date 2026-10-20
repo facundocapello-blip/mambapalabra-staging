@@ -1,0 +1,25 @@
+name: Fish RC3 real STAGING online duel (two browsers)
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/qa_fish_online_live.py'
+      - '.github/workflows/qa-fish-online-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  online-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and WebKit
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Test real staging online rooms in two browser contexts
+        run: python tools/qa_fish_online_live.py
