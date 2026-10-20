@@ -56,14 +56,18 @@ with ZipFile(BASE) as z:
  release.update(version=VERSION,fish_bank_mp3=811,fish_voice=VOICE_ID,fish_model=MODEL,voice_overlay="Fish only: 811 bank clips, 3 intros, sudden death; no neutral voice fallback",production_untouched=True)
  with ZipFile(OUT,"w",ZIP_DEFLATED,compresslevel=4) as out:
   for item in z.infolist():
-   if item.filename.startswith("piper-audio/"):\n    continue\n   if item.filename=="index.html":out.writestr(item,s.encode("utf-8"))
+   if item.filename.startswith("piper-audio/"):
+    continue
+   if item.filename=="index.html":out.writestr(item,s.encode("utf-8"))
    elif item.filename=="PIPER_RELEASE.json":out.writestr(item,json.dumps(release,ensure_ascii=False,indent=2))
    else:out.writestr(item,z.read(item.filename))
-  for filename,_,_ in expected:out.writestr("fish-bank/"+filename,(BANK/filename).read_bytes())\n  out.writestr("fish-audio/08_muerte_subita.mp3",Path("fish-extra/08_muerte_subita.mp3").read_bytes())
+  for filename,_,_ in expected:out.writestr("fish-bank/"+filename,(BANK/filename).read_bytes())
+  out.writestr("fish-audio/08_muerte_subita.mp3",Path("fish-extra/08_muerte_subita.mp3").read_bytes())
   out.writestr("FISH_BANK_RELEASE.json",json.dumps({"version":VERSION,"model":MODEL,"voice_id":VOICE_ID,"bank_sha256":EXPECTED_SHA,"fish_clips":811,"casting_intro_clips":8,"scope":"STAGING only"},ensure_ascii=False,indent=2))
 with ZipFile(OUT) as z:
  assert sum(x.startswith("fish-bank/") and x.endswith(".mp3") for x in z.namelist())==811
  assert sum(x.startswith("fish-audio/") and x.endswith(".mp3") for x in z.namelist())==8
  assert sum(x.startswith("piper-audio/") and x.endswith(".mp3") for x in z.namelist())==0
- assert z.read("index.html").decode()==s\n assert "return deviceSpeak(" not in s
+ assert z.read("index.html").decode()==s
+ assert "return deviceSpeak(" not in s
 print("Fish 398 full bank STAGING ZIP:",OUT,"bytes:",OUT.stat().st_size)
