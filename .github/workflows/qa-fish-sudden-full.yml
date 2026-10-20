@@ -1,0 +1,33 @@
+name: Fish RC3 full-round and sudden-death regression
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/qa_fish_sudden_full.py'
+      - '.github/workflows/qa-fish-sudden-full.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  full-round:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Chromium and WebKit
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Retrieve verified Fish-only RC3 package
+        uses: actions/download-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC3_STAGING_QA
+          run-id: 39361651619
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Test full round, sudden death, winner and restart
+        run: python tools/qa_fish_sudden_full.py
