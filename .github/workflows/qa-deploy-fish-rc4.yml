@@ -1,4 +1,4 @@
-name: Fish RC4 definition speed - QA and isolated STAGING deploy
+name: Fish RC4 definition speed - isolated STAGING QA
 on:
   push:
     branches: [qa/fish-voice-free-api-test]
@@ -10,17 +10,10 @@ on:
 permissions:
   contents: read
   actions: read
-  pages: write
-  id-token: write
-concurrency:
-  group: mambapalabra-staging-pages
-  cancel-in-progress: false
 jobs:
-  qa-deploy:
+  qa:
     runs-on: ubuntu-latest
     timeout-minutes: 35
-    environment:
-      name: github-pages
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -67,62 +60,3 @@ jobs:
           name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC4_STAGING_QA
           path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC4_STAGING.zip
           retention-days: 30
-      - name: Extract verified RC4 to isolated Pages site
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          from zipfile import ZipFile
-          import json,hashlib
-          zpath=Path('dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC4_STAGING.zip')
-          root=Path('_site').resolve()
-          root.mkdir(parents=True,exist_ok=True)
-          with ZipFile(zpath) as z:
-            for entry in z.infolist():
-              assert (root/entry.filename).resolve().is_relative_to(root)
-            z.extractall(root)
-          version='B1.13.1-UX1-FISH398-VOZ-UNICA-RC4-STAGING'
-          release=json.loads((root/'FISH_SPEED_RELEASE.json').read_text())
-          assert release['version']==version and release['definition_speed_multiplier']==1.08
-          assert release['changed_audio_files']==0
-          assert len(list((root/'fish-bank').glob('*.mp3')))==811
-          assert len(list((root/'fish-audio').glob('*.mp3')))==8
-          assert not (root/'piper-audio').exists()
-          s=(root/'index.html').read_text()
-          assert 'FISH_DEFINITION_SPEED_MULTIPLIER=1.08' in s
-          assert 'return deviceSpeak(' not in s
-          manifest=root/'manifest.webmanifest'
-          if manifest.exists():
-            m=json.loads(manifest.read_text())
-            m['start_url']='/mambapalabra-staging/'
-            manifest.write_text(json.dumps(m,ensure_ascii=False))
-          (root/'.nojekyll').touch()
-          (root/'STAGING_BUILD.json').write_text(json.dumps({
-            'version':version,'fish_mp3':819,'definition_speed_multiplier':1.08,
-            'index_sha256':hashlib.sha256(s.encode()).hexdigest(),'production_untouched':True
-          },indent=2))
-          print('RC4 staged for isolated Pages deploy:',version)
-          PY
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-      - uses: actions/deploy-pages@v4
-  live-qa:
-    needs: qa-deploy
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - name: Install live browser QA dependencies
-        run: |
-          pip install playwright==1.58.0
-          python -m playwright install --with-deps chromium webkit
-      - name: Verify RC4 HTTPS live, intro, Fish definition and MP3 fetch
-        env:
-          EXPECTED_FISH_VERSION: B1.13.1-UX1-FISH398-VOZ-UNICA-RC4-STAGING
-        run: python tools/qa_fish_live_pages.py
-      - name: Verify real STAGING online rooms in two browser contexts
-        run: python tools/qa_fish_online_live.py
