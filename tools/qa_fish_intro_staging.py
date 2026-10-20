@@ -6,7 +6,8 @@ import http.server, threading, json, os
 from playwright.sync_api import sync_playwright
 
 full_fish=os.getenv("QA_FISH_FULL")=="1"
-zip_path=Path("dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC2_STAGING.zip" if full_fish else "dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip")
+rc3=os.getenv("QA_FISH_RC3")=="1"
+zip_path=Path("dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip" if rc3 else "dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC2_STAGING.zip" if full_fish else "dist/MAMBAPALABRA_B1.13.1_UX1_FISH_VOCES_INTROS_RC1_STAGING.zip")
 site=Path("dist/fish-qa-site")
 site.mkdir(parents=True,exist_ok=True)
 with ZipFile(zip_path) as z:
@@ -19,6 +20,8 @@ threading.Thread(target=server.serve_forever,daemon=True).start()
 url=f"http://127.0.0.1:{server.server_address[1]}/"
 MOCK=r"""(() => {
 window.__fishLoads=[];
+window.__deviceTTSCalls=0;
+if(window.speechSynthesis){window.speechSynthesis.speak=()=>{window.__deviceTTSCalls++}}
 const originalFetch=window.fetch.bind(window);
 window.fetch=(input,...args)=>{const path=typeof input==="string"?input:input?.url||"";if(path.includes("fish-audio/")||path.includes("fish-bank/")||path.includes("piper-audio/"))window.__fishLoads.push(path);return originalFetch(input,...args)};
 class MockAudio {
@@ -80,6 +83,7 @@ with sync_playwright() as p:
   assert page.locator("#timer1").inner_text()=="02:30"
   page.wait_for_function('!document.querySelector("#micBtn").disabled',timeout=15000)
   assert page.evaluate('window.__fishLoads.filter(x=>x.includes("03_intro_inicio.mp3")).length')==count
+  if rc3:assert page.evaluate("window.__deviceTTSCalls")==0
   if full_fish:assert not page.evaluate('window.__fishLoads.some(x=>x.includes("piper-audio/"))'),"Unexpected mixed Piper voice"
   assert not errors,errors
   print(f"{name} PASS: intro/clock/first clue/correct/repeat/pass/wrong/restart; loads={page.evaluate('window.__fishLoads.length')}",flush=True)
