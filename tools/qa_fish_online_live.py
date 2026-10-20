@@ -23,7 +23,7 @@ with sync_playwright() as p:
    page.on("pageerror",lambda e:errors.append(str(e)))
    page.add_init_script(MOCK)
    page.goto(BASE,wait_until="domcontentloaded",timeout=45000)
-   page.wait_for_function('window.supabase&&window.supabase.createClient',timeout=20000)
+   page.wait_for_function('!!(window.supabase&&typeof window.supabase.createClient==="function")',timeout=20000)
   host.evaluate(f'document.querySelector("#onlineName").value="QAHost{suffix}"')
   host.locator("#createOnlineBtn").click()
   host.wait_for_function('document.querySelector("#roomCode").textContent.length===6',timeout=30000)
