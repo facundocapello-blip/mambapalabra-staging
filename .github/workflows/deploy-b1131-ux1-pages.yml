@@ -51,6 +51,35 @@ jobs:
           patch --batch --fuzz=0 -p1 < ../qa/B1.13.1-RC1-UX1.patch
           patch --batch --fuzz=0 -p1 < ../qa/B1.13.1-UX1-BANCO194.patch
           echo 'e9f03e8c0fb62d4cec6867efc2c4e4e03d8b8f1edf8cb7d5027794d1044d6546  index.html' | sha256sum -c -
+      - name: Limit selectable definitions to approved recorded conductor voice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('_site/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='const ACTIVE_QUESTION_POOL=QUESTION_POOL.slice();'
+          new='''const ACTIVE_QUESTION_POOL=QUESTION_POOL.filter(q=>!isTextOnlyQuestion(q)&&
+            NEW_VOICE_AUDIO.has(STATIC_AUDIO[(q[4]==="CONTIENE"?"Contiene ":"")+q[0]+": "+q[2]])&&
+            NEW_VOICE_AUDIO.has(STATIC_AUDIO["Incorrecto. Era "+q[1]+"."]));'''
+          if s.count(old)!=1: raise RuntimeError('Unexpected question selection source')
+          s=s.replace(old,new)
+          # Do not silently reinsert questions without approved MP3 via missing-letter fallback.
+          start=s.index('  const missingLetters=new Set(LETTERS.filter(letter=>!ACTIVE_QUESTION_POOL.some(q=>q[0]===letter)));')
+          end=s.index('  let questionDrawUsed=',start)
+          s=s[:start]+'''  const missingLetters=LETTERS.filter(letter=>!ACTIVE_QUESTION_POOL.some(q=>q[0]===letter));
+          if(missingLetters.length)console.error("Missing recorded voice for letters:",missingLetters.join(","));
+          '''+s[end:]
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check <(python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('_site/index.html').read_text()
+          print(re.search(r'<script>([\\s\\S]*?)</script>',s).group(1))
+          PY
+          )
       - name: Adapt static asset base path for isolated GitHub Pages
         shell: bash
         run: |
