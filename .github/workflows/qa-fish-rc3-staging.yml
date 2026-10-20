@@ -1,0 +1,83 @@
+name: Fish voice only RC3 - staging package and browser QA
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - 'tools/package_fish_bank_rc3_staging.py'
+      - '.github/workflows/qa-fish-rc3-staging.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  rc3-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser QA dependencies
+        run: |
+          npm install --no-save --no-package-lock jszip@3.10.2 diff@9.0.0
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Restore validated Fish bank (811 clips)
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Bank-811-Partial-Or-Complete
+          run-id: 39200425081
+          github-token: ${{ github.token }}
+          path: artifacts/fish-bank
+      - name: Restore validated Fish intros (7 clips)
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Voice-Free-Casting
+          run-id: 39169945032
+          github-token: ${{ github.token }}
+          path: fish-casting
+      - name: Restore sudden-death Fish phrase (1 clip)
+        uses: actions/download-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Sudden-Death-Clip
+          run-id: 39361568017
+          github-token: ${{ github.token }}
+          path: fish-extra
+      - name: Rebuild baseline and strict Fish-only RC3 package
+        run: |
+          node tools/package_piper_release.mjs
+          python tools/package_fish_intro_staging.py
+          python tools/package_fish_bank_rc3_staging.py
+      - name: Check 811 approved mappings and no neutral fallback
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import json
+          z=ZipFile('dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip')
+          names=z.namelist()
+          assert sum(n.startswith('fish-bank/') and n.endswith('.mp3') for n in names)==811
+          assert sum(n.startswith('fish-audio/') and n.endswith('.mp3') for n in names)==8
+          assert not any(n.startswith('piper-audio/') for n in names)
+          html=z.read('index.html').decode()
+          assert 'return deviceSpeak(' not in html
+          assert 'window.speechSynthesis.speak(u)' not in html
+          assert 'NEW_VOICE_AUDIO.clear()' in html
+          assert 'fish-audio/08_muerte_subita.mp3' in html
+          print('PASS: 811 Fish bank + 8 Fish extras, no Piper files or device TTS fallback')
+          PY
+      - name: Regression Chromium + WebKit, iPhone-sized viewport
+        env:
+          QA_FISH_FULL: '1'
+          QA_FISH_RC3: '1'
+        run: python tools/qa_fish_intro_staging.py
+      - uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC3_STAGING_QA
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip
+          retention-days: 30
