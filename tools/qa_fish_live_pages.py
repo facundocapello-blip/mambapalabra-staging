@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Smoke test the actual isolated GitHub Pages STAGING deployment, not local ZIP."""
-import ast,json,urllib.request
+import ast,json,os,urllib.request
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE="https://facundocapello-blip.github.io/mambapalabra-staging/"
 with urllib.request.urlopen(BASE+"STAGING_BUILD.json",timeout=30) as response:
  info=json.load(response)
-assert info["version"]=="B1.13.1-UX1-FISH398-VOZ-UNICA-RC3-STAGING",info
+assert info["version"]==os.getenv("EXPECTED_FISH_VERSION","B1.13.1-UX1-FISH398-VOZ-UNICA-RC3-STAGING"),info
 assert info["fish_mp3"]==819,info
 print("Live staging build manifest PASS:",info["version"],flush=True)
 source=ast.parse(Path("tools/qa_fish_intro_staging.py").read_text())
