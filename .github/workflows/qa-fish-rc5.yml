@@ -1,0 +1,45 @@
+name: Fish RC5 +12 percent definitions isolated QA
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths: ['.github/workflows/qa-fish-rc5.yml','tools/package_fish_definition_speed_rc5.py']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - uses: actions/download-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC4_STAGING_QA
+          run-id: 39412672267
+          github-token: ${{ github.token }}
+          path: dist
+      - run: python tools/package_fish_definition_speed_rc5.py
+      - name: Browser speed regression
+        run: |
+          sed -i 's/RC4_STAGING.zip/RC5_STAGING.zip/g;s/1.08/1.12/g' tools/qa_fish_definition_speed_rc4.py
+          python tools/qa_fish_definition_speed_rc4.py
+      - name: Full gameplay regression
+        env:
+          QA_FISH_FULL: '1'
+          QA_FISH_RC3: '1'
+        run: |
+          cp dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC5_STAGING.zip dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip
+          python tools/qa_fish_intro_staging.py
+          python tools/qa_fish_sudden_full.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC5_STAGING_QA
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC5_STAGING.zip
+          retention-days: 30
