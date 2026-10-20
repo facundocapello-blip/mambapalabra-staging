@@ -1,0 +1,41 @@
+name: Fish Audio - sudden-death conductor clip (STAGING)
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - '.github/workflows/fish-sudden-death-voice.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  one-clip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+      - name: Generate only missing sudden-death phrase with Fish free voice
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: |
+          python - <<'PY'
+          import sys
+          sys.path.insert(0,'tools')
+          import test_fish_voice_free_api as fish
+          assert fish.MODEL=='s2.1-pro-free'
+          fish.OUT=fish.Path('fish-extra')
+          fish.generate('08_muerte_subita','Empate. Vamos a muerte súbita.',__import__('os').environ['FISH_API_KEY'])
+          PY
+          ffprobe -v error -show_entries format=duration -of default=nw=1 fish-extra/08_muerte_subita.mp3
+          ffmpeg -v error -i fish-extra/08_muerte_subita.mp3 -f null -
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Mambapalabra-Fish-Sudden-Death-Clip
+          path: fish-extra/08_muerte_subita.mp3
+          retention-days: 30
