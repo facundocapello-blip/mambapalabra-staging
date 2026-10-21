@@ -30,7 +30,7 @@ def patch_html(s):
     # RC5 clears and rebuilds the Fish whitelist after constructing the audio maps.
     # Register the two new cues after that reset, or the short clips are silently filtered.
     s = replace_once(s, 'NEW_VOICE_AUDIO.add("fish-audio/08_muerte_subita.mp3");',
-                     'NEW_VOICE_AUDIO.add("fish-audio/08_muerte_subita.mp3");\\n  NEW_VOICE_AUDIO.add("fish-audio/09_incorrecto_corto.mp3");\\n  NEW_VOICE_AUDIO.add("fish-audio/10_pasapalabra_corto.mp3");')
+                     'NEW_VOICE_AUDIO.add("fish-audio/08_muerte_subita.mp3");\n  NEW_VOICE_AUDIO.add("fish-audio/09_incorrecto_corto.mp3");\n  NEW_VOICE_AUDIO.add("fish-audio/10_pasapalabra_corto.mp3");')
     s = replace_once(s, 'const expected=item.answer,wrongLead=`Incorrecto. Era ${expected}.`,other=1-previousOwner;',
                      'const expected=item.answer,wrongLead="Incorrecto.",other=1-previousOwner;')
     s = replace_once(s, 'turnPrompt(CUSTOM_AUDIO.pass?"__CUSTOM_PASS__":"",true);', 'turnPrompt("Pasapalabra.",true);', expected=2)
