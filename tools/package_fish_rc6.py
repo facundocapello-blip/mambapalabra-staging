@@ -89,7 +89,7 @@ def main():
         dst.writestr('FISH_TURN_RELEASE.json', json.dumps({'version': RC6, 'source': RC5, 'model': manifest['model'], 'voice_id': manifest['voice_id'], 'clips': manifest['clips'], 'turn_handoff': 'short cues only, no answer recitation or player announcement', 'definition_playback_rate': 1.22, 'scope': 'STAGING only'}, ensure_ascii=False, indent=2))
     with ZipFile(SOURCE) as old, ZipFile(TARGET) as new:
         changes = [n for n in old.namelist() if old.read(n) != new.read(n)]
-        assert set(changes) <= {'index.html', 'PIPER_RELEASE.json', 'FISH_BANK_RELEASE.json', 'FISH_SPEED_RELEASE.json'}
+        assert set(changes) <= {'index.html', 'PIPER_RELEASE.json', 'FISH_BANK_RELEASE.json', 'FISH_CASTING_RELEASE.json', 'FISH_SPEED_RELEASE.json'}
         assert 'index.html' in changes
         assert all(old.read(n) == new.read(n) for n in old.namelist() if n.endswith('.mp3'))
         assert sum(n.startswith('fish-audio/') and n.endswith('.mp3') for n in new.namelist()) == 10
