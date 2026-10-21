@@ -1,0 +1,78 @@
+name: Fish RC6 faster definitions and short handoffs - isolated QA
+on:
+  push:
+    branches: [qa/fish-voice-free-api-test]
+    paths:
+      - '.github/workflows/qa-fish-rc6.yml'
+      - 'tools/generate_fish_turn_clips_rc6.py'
+      - 'tools/package_fish_rc6.py'
+      - 'tools/qa_fish_rc6.py'
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install browser QA dependencies
+        run: |
+          pip install playwright==1.58.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Generate exactly two short cues - free Fish model only
+        env:
+          FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
+        run: python tools/generate_fish_turn_clips_rc6.py
+      - name: Validate short Fish MP3 clips
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import json,subprocess
+          root=Path('artifacts/fish-rc6-turn-clips')
+          manifest=json.loads((root/'manifest.json').read_text())
+          assert len(manifest['clips'])==2
+          for item in manifest['clips']:
+            file=root/item['file']
+            d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',str(file)]))
+            assert .1<d<3.5,(file,d)
+            print('PASS short cue',file.name,'duration',round(d,2),'seconds')
+          PY
+      - name: Restore QA-approved RC5 package
+        uses: actions/download-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC5_STAGING_QA
+          run-id: 39438581046
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Package RC6 without modifying existing MP3
+        run: python tools/package_fish_rc6.py
+      - name: Check embedded JavaScript syntax
+        run: |
+          python - <<'PY'
+          import re,zipfile
+          p='dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC6_STAGING.zip'
+          with zipfile.ZipFile(p) as z:s=z.read('index.html').decode()
+          open('/tmp/fish-rc6-inline.js','w').write('\n'.join(re.findall(r'<script[^>]*>(.*?)</script>',s,re.S)))
+          PY
+          node --check /tmp/fish-rc6-inline.js
+      - name: Chromium and WebKit - short handoff and speed regression
+        run: python tools/qa_fish_rc6.py
+      - name: Chromium and WebKit - full game regression
+        env:
+          QA_FISH_FULL: '1'
+          QA_FISH_RC3: '1'
+        run: |
+          cp dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC6_STAGING.zip dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip
+          python tools/qa_fish_intro_staging.py
+          python tools/qa_fish_sudden_full.py
+      - name: Archive isolated RC6 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC6_STAGING_QA
+          path: dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC6_STAGING.zip
+          retention-days: 30
