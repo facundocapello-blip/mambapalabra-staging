@@ -26,7 +26,11 @@ def patch_html(s):
         'audio.playbackRate=(online.enabled?1:HOST_PLAYBACK_RATE)*(/^fish-bank\\/q\\d{4}\\.mp3$/.test(path)?FISH_DEFINITION_SPEED_MULTIPLIER:1);',
         'audio.playbackRate=/^fish-bank\\/q\\d{4}\\.mp3$/.test(path)?FISH_DEFINITION_PLAYBACK_RATE:(/^fish-audio\\/(?:09_incorrecto_corto|10_pasapalabra_corto)\\.mp3$/.test(path)?1.12:(online.enabled?1:HOST_PLAYBACK_RATE));')
     anchor = 'for(const [phrase,url] of Object.entries(FISH_CASTING_MAP)){STATIC_AUDIO[phrase]=url;NEW_VOICE_AUDIO.add(url);}'
-    s = replace_once(s, anchor, anchor + '\n  // RC6: two short cues in the same Fish voice, never device TTS.\n  for(const [phrase,url] of Object.entries({"Incorrecto.":"fish-audio/09_incorrecto_corto.mp3","Pasapalabra.":"fish-audio/10_pasapalabra_corto.mp3"})){STATIC_AUDIO[phrase]=url;NEW_VOICE_AUDIO.add(url);}')
+    s = replace_once(s, anchor, anchor + '\n  // RC6: two short cues in the same Fish voice, never device TTS.\n  for(const [phrase,url] of Object.entries({"Incorrecto.":"fish-audio/09_incorrecto_corto.mp3","Pasapalabra.":"fish-audio/10_pasapalabra_corto.mp3"})){STATIC_AUDIO[phrase]=url;}')
+    # RC5 clears and rebuilds the Fish whitelist after constructing the audio maps.
+    # Register the two new cues after that reset, or the short clips are silently filtered.
+    s = replace_once(s, 'NEW_VOICE_AUDIO.add("fish-audio/08_muerte_subita.mp3");',
+                     'NEW_VOICE_AUDIO.add("fish-audio/08_muerte_subita.mp3");\\n  NEW_VOICE_AUDIO.add("fish-audio/09_incorrecto_corto.mp3");\\n  NEW_VOICE_AUDIO.add("fish-audio/10_pasapalabra_corto.mp3");')
     s = replace_once(s, 'const expected=item.answer,wrongLead=`Incorrecto. Era ${expected}.`,other=1-previousOwner;',
                      'const expected=item.answer,wrongLead="Incorrecto.",other=1-previousOwner;')
     s = replace_once(s, 'turnPrompt(CUSTOM_AUDIO.pass?"__CUSTOM_PASS__":"",true);', 'turnPrompt("Pasapalabra.",true);', expected=2)
