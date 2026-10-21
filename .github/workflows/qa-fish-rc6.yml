@@ -24,6 +24,8 @@ jobs:
         run: |
           pip install playwright==1.58.0
           python -m playwright install --with-deps chromium webkit
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
       - name: Generate exactly two short cues - free Fish model only
         env:
           FISH_API_KEY: ${{ secrets.FISH_API_KEY }}
@@ -36,6 +38,7 @@ jobs:
           root=Path('artifacts/fish-rc6-turn-clips')
           manifest=json.loads((root/'manifest.json').read_text())
           assert len(manifest['clips'])==2
+          assert len({x['sha256'] for x in manifest['clips']})==2, 'Short cues unexpectedly identical'
           for item in manifest['clips']:
             file=root/item['file']
             d=float(subprocess.check_output(['ffprobe','-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',str(file)]))
