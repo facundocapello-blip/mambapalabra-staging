@@ -1,0 +1,72 @@
+--- B1.13.1-RC1/index.html
++++ B1.13.1-RC1-UX1-STAGING/index.html
+@@ -17,7 +17,7 @@
+ <meta name="format-detection" content="telephone=no" />
+ 
+ <title>MAMBAPALABRA</title>
+-<meta name="mambapalabra-version" content="B1.13.1-RC1">
++<meta name="mambapalabra-version" content="B1.13.1-RC1-UX1-STAGING">
+ 
+ 
+ 
+@@ -205,6 +205,23 @@
+  .game .question-card{gap:2px;min-height:0}.game .question-row{padding:4px 8px}.game .question{height:28px;min-height:28px!important;max-height:28px;overflow:auto;font-size:14px}
+  .game .transcript{min-height:14px;font-size:11px}.game .b1-actions{gap:6px;margin:0}.game .b1-actions button:not([hidden]){min-height:44px;padding:4px;font-size:13px}
+  .game .answer-row{margin:0}.game .answer-row input,.game .answer-row button{min-height:44px;padding:4px}.game .note{margin:0;font-size:10px;line-height:1.1}
++}
++
++/* B1.13.1-UX1 STAGING: more legible, height-aware iPhone landscape; no change to portraits. */
++@media (orientation:landscape) and (max-height:500px) and (max-width:1000px){
++ .game{--ux-landscape-ring:clamp(160px,44dvh,194px);grid-template-rows:var(--ux-landscape-ring) minmax(0,1fr);gap:4px;padding:0 max(10px,env(safe-area-inset-right)) 0 max(10px,env(safe-area-inset-left))}
++ .game .boards{grid-template-columns:minmax(0,1fr) 136px;grid-template-rows:var(--ux-landscape-ring);min-height:var(--ux-landscape-ring)}
++ .game .player-card.active{height:var(--ux-landscape-ring)}
++ .game .player-card.active .rosco{width:var(--ux-landscape-ring)!important;height:var(--ux-landscape-ring)}
++ .game .letter-chip{width:clamp(13px,3.6dvh,17px)!important;height:clamp(13px,3.6dvh,17px)!important;margin:calc(clamp(13px,3.6dvh,17px) * -.5)!important;font-size:clamp(9px,2.4dvh,11px)!important}
++ .game .rosco-center strong{font-size:clamp(28px,9dvh,38px)}
++ .game .stage-metrics{justify-content:center;gap:5px}
++ .game .player-time:has(.time-orb.active-turn) .orb-name{color:#fff;background:#a62bb8;padding:3px 10px;border-radius:100px}
++ .game .question-card{gap:3px}
++ .game .question{height:36px;max-height:36px;min-height:36px!important;font-size:14px;line-height:1.2}
++ .game .question-row{padding:5px 8px}
++ .game .b1-actions button:not([hidden]){min-height:46px;font-size:14px}
++ .game .answer-row input,.game .answer-row button{min-height:44px}
+ }
+ </style>
+ </head>
+@@ -1224,6 +1241,14 @@
+     }
+     game.audioFailed=false;return true;
+   }
++  // B1.13.1-UX1: conductor cadence between distinct clips, never while ANSWERING.
++  // A stale turn exits after the short beat; the current voice/audio engine remains unchanged.
++  const PRESENTER_PAUSE_MS={result:190,player:130};
++  async function presenterBeat(ms,valid){
++    if(!speechOn)return valid();
++    await new Promise(resolve=>setTimeout(resolve,ms));
++    return valid();
++  }
+   function turnKey(){const q=game.suddenDeath?game.suddenQuestion:currentItem();return [game.matchId,game.turnToken,game.active,game.suddenDeath?game.suddenRound:player().phase,q?.index??q?.letter].join(":");}
+   async function turnPrompt(lead="",announcePlayer=false){
+     if(!game||game.over||game.suddenDeath)return;
+@@ -1243,8 +1268,8 @@
+       setTurnState(TURN_STATE.ANSWERING);startTimer(owner);return;
+     }
+     if(!host.unlocked)await unlockAudio();if(!stillValid())return;
+-    if(lead){const result=await hostSpeak(lead);if(!stillValid()||!readingCanFinish(result))return;}
+-    if(announcePlayer){const result=await hostSpeak(playerAnnouncement(p.name));if(!stillValid()||!readingCanFinish(result))return;}
++    if(lead){const result=await hostSpeak(lead);if(!stillValid()||!readingCanFinish(result)||!await presenterBeat(PRESENTER_PAUSE_MS.result,stillValid))return;}
++    if(announcePlayer){const result=await hostSpeak(playerAnnouncement(p.name));if(!stillValid()||!readingCanFinish(result)||!await presenterBeat(PRESENTER_PAUSE_MS.player,stillValid))return;}
+     if(p.pendingJustStarted)p.pendingJustStarted=false;
+     const result=await hostSpeak(promptForItem(item));
+     if(!stillValid()||!readingCanFinish(result))return;
+@@ -1379,8 +1404,8 @@
+     const valid=()=>game===instance&&!game.over&&game.suddenDeath&&token===game.turnToken;
+     const idle=await waitForRecognitionIdle();if(!valid())return;
+     if(idle){
+-      if(lead){const result=await hostSpeak(lead);if(!valid()||!readingCanFinish(result))return;}
+-      const nameResult=await hostSpeak(playerAnnouncement(player().name));if(!valid()||!readingCanFinish(nameResult))return;
++      if(lead){const result=await hostSpeak(lead);if(!valid()||!readingCanFinish(result)||!await presenterBeat(PRESENTER_PAUSE_MS.result,valid))return;}
++      const nameResult=await hostSpeak(playerAnnouncement(player().name));if(!valid()||!readingCanFinish(nameResult)||!await presenterBeat(PRESENTER_PAUSE_MS.player,valid))return;
+       const result=await hostSpeak(promptForItem(q));if(!valid()||!readingCanFinish(result))return;
+     }else els.transcript.textContent="Micrófono pendiente de cierre. Respondé por texto.";
+     setTurnState(TURN_STATE.ANSWERING);updateSuddenControls();

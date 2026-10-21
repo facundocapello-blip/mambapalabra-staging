@@ -1,0 +1,104 @@
+name: Deploy B1.13.1 UX1 to isolated Pages
+on:
+  workflow_dispatch:
+  push:
+    branches: [ux/b1131-presenter-iphone]
+    paths: ['.github/workflows/deploy-b1131-ux1-pages.yml']
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: mambapalabra-staging-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Retrieve and validate exact approved source
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 3 -o /tmp/original.zip 'https://raw.githubusercontent.com/facundocapello-blip/Mambapalabra/descarga/b1131-rc1/Mambapalabra-B1.13.1-RC1.zip'
+          echo '89fa0a512c42d66f58aa29e82e99ce40d62e315fbf314838fd54446e7ba70fcf  /tmp/original.zip' | sha256sum -c -
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          with ZipFile('/tmp/original.zip') as z:
+              entries=z.infolist()
+              for entry in entries:
+                  path=Path(entry.filename)
+                  if path.is_absolute() or '..' in path.parts:
+                      raise RuntimeError('Unsafe ZIP path')
+              z.extractall('/tmp/original')
+          indexes=list(Path('/tmp/original').rglob('index.html'))
+          if len(indexes)!=1: raise RuntimeError(f'Expected one index.html, found {len(indexes)}')
+          root=indexes[0].parent
+          import shutil
+          shutil.copytree(root, '_site', dirs_exist_ok=True)
+          PY
+          echo '465e091e3ae8d55416565fe8c7b81b30f9f937d00338d527b98fd991abf741c8  _site/index.html' | sha256sum -c -
+      - name: Apply approved UX1 and Banco194 patches
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd _site
+          patch --batch --fuzz=0 -p1 < ../qa/B1.13.1-RC1-UX1.patch
+          patch --batch --fuzz=0 -p1 < ../qa/B1.13.1-UX1-BANCO194.patch
+          echo 'e9f03e8c0fb62d4cec6867efc2c4e4e03d8b8f1edf8cb7d5027794d1044d6546  index.html' | sha256sum -c -
+      - name: Limit selectable definitions to approved recorded conductor voice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('_site/index.html')
+          s=p.read_text(encoding='utf-8')
+          old='const ACTIVE_QUESTION_POOL=QUESTION_POOL.slice();'
+          new='''const ACTIVE_QUESTION_POOL=QUESTION_POOL.filter(q=>!isTextOnlyQuestion(q)&&
+            NEW_VOICE_AUDIO.has(STATIC_AUDIO[(q[4]==="CONTIENE"?"Contiene ":"")+q[0]+": "+q[2]])&&
+            NEW_VOICE_AUDIO.has(STATIC_AUDIO["Incorrecto. Era "+q[1]+"."]));'''
+          if s.count(old)!=1: raise RuntimeError('Unexpected question selection source')
+          s=s.replace(old,new)
+          # Do not silently reinsert questions without approved MP3 via missing-letter fallback.
+          start=s.index('  const missingLetters=new Set(LETTERS.filter(letter=>!ACTIVE_QUESTION_POOL.some(q=>q[0]===letter)));')
+          end=s.index('  let questionDrawUsed=',start)
+          s=s[:start]+'''  const missingLetters=LETTERS.filter(letter=>!ACTIVE_QUESTION_POOL.some(q=>q[0]===letter));
+          if(missingLetters.length)console.error("Missing recorded voice for letters:",missingLetters.join(","));
+          '''+s[end:]
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check <(python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('_site/index.html').read_text()
+          print(re.search(r'<script>([\\s\\S]*?)</script>',s).group(1))
+          PY
+          )
+      - name: Adapt static asset base path for isolated GitHub Pages
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          index=Path('_site/index.html')
+          source=index.read_text(encoding='utf-8')
+          changed=source.replace('/Mambapalabra/', '/mambapalabra-staging/')
+          if source==changed: raise RuntimeError('Expected absolute production-style asset paths not found')
+          index.write_text(changed,encoding='utf-8')
+          Path('_site/.nojekyll').touch()
+          import json,hashlib
+          audios=list(Path('_site').rglob('*.mp3'))
+          if len(audios)!=188: raise RuntimeError(f'Expected 188 MP3; found {len(audios)}')
+          Path('_site/STAGING_BUILD.json').write_text(json.dumps({'version':'B1.13.1-UX1-BANCO194','mp3_count':len(audios),'html_sha256':hashlib.sha256(index.read_bytes()).hexdigest()},indent=2))
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

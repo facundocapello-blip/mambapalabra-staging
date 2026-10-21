@@ -1,0 +1,70 @@
+name: Deploy Fish398 RC3 to isolated STAGING Pages
+on:
+  push:
+    branches: [ux/b1131-presenter-iphone]
+    paths: ['.github/workflows/deploy-fish-rc3-pages.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+concurrency:
+  group: mambapalabra-staging-pages
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download verified Fish-only RC3 release
+        uses: actions/download-artifact@v4
+        with:
+          name: MAMBAPALABRA_FISH398_VOZ_UNICA_RC3_STAGING_QA
+          run-id: 39361651619
+          github-token: ${{ github.token }}
+          path: dist
+      - name: Validate and extract release into isolated Pages site
+        run: |
+          python - <<'PY'
+          from zipfile import ZipFile
+          from pathlib import Path
+          import json,hashlib
+          source=Path('dist/MAMBAPALABRA_B1.13.1_UX1_FISH398_VOZ_UNICA_RC3_STAGING.zip')
+          assert source.is_file()
+          root=Path('_site').resolve()
+          root.mkdir(parents=True,exist_ok=True)
+          with ZipFile(source) as z:
+            for entry in z.infolist():
+              target=(root/entry.filename).resolve()
+              assert target.is_relative_to(root),entry.filename
+            z.extractall(root)
+          names=list(root.rglob('*.mp3'))
+          fish_bank=list((root/'fish-bank').glob('*.mp3'))
+          fish_extra=list((root/'fish-audio').glob('*.mp3'))
+          assert len(fish_bank)==811 and len(fish_extra)==8
+          assert not (root/'piper-audio').exists()
+          s=(root/'index.html').read_text(encoding='utf-8')
+          assert 'return deviceSpeak(' not in s
+          assert 'NEW_VOICE_AUDIO.clear()' in s
+          manifest=root/'manifest.webmanifest'
+          if manifest.exists():
+            p=json.loads(manifest.read_text(encoding='utf-8'))
+            p['start_url']='/mambapalabra-staging/'
+            manifest.write_text(json.dumps(p,ensure_ascii=False),encoding='utf-8')
+          (root/'.nojekyll').touch()
+          version=json.loads((root/'FISH_BANK_RELEASE.json').read_text())
+          assert version['version']=='B1.13.1-UX1-FISH398-VOZ-UNICA-RC3-STAGING'
+          (root/'STAGING_BUILD.json').write_text(json.dumps({'version':version['version'],'fish_mp3':len(fish_bank)+len(fish_extra),'index_sha256':hashlib.sha256(s.encode()).hexdigest(),'production_untouched':True},indent=2))
+          print('Ready for isolated staging Pages:',len(names),'MP3 files; Fish:',len(fish_bank)+len(fish_extra))
+          PY
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
