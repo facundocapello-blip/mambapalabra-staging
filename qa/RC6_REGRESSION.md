@@ -19,18 +19,25 @@ Base obligatoria: RC5 aprobada, paquete QA GitHub Actions 39438581046. Solo STAG
 - Sin cambios en producción.
 
 ## Lista reutilizable de pruebas
-- [ ] Sintaxis JS y comparación byte a byte de todos los MP3 de RC5.
-- [ ] Decodificación, duración, identidad de voz declarada y hashes distintos de los dos clips.
-- [ ] Chromium + WebKit: intro → primera definición 1.22 → respuesta correcta → siguiente letra.
-- [ ] Chromium + WebKit: incorrecta → solo «Incorrecto» → cambio de jugador → nueva definición.
-- [ ] Chromium + WebKit: Pasapalabra botón → solo «Pasapalabra» → cambio de jugador.
+- [x] Sintaxis JS y comparación byte a byte de todos los MP3 de RC5.
+- [x] Decodificación, duración, identidad de voz declarada y hashes distintos de los dos clips.
+- [x] Chromium + WebKit: intro → primera definición 1.22 → respuesta correcta → siguiente letra.
+- [x] Chromium + WebKit: incorrecta → solo «Incorrecto» → cambio de jugador → nueva definición.
+- [x] Chromium + WebKit: Pasapalabra botón → solo «Pasapalabra» → cambio de jugador.
 - [ ] Pasapalabra por reconocimiento de voz real en Safari iPhone (pendiente de dispositivo físico).
-- [ ] Repetir definición; reloj pausado durante reproducción.
+- [x] Repetir definición; reloj pausado durante reproducción.
 - [ ] Fin de tiempo, resultados y reinicio.
-- [ ] Partida local completa → empate → muerte súbita → ganador → reinicio.
-- [ ] Online con dos navegadores independientes y Supabase STAGING real: crear/unirse, puntuación, error, pasapalabra, cambio de turno y sincronización.
+- [x] Partida local completa → empate → muerte súbita → ganador → reinicio.
+- [x] Online con dos navegadores independientes y Supabase STAGING real: crear/unirse, puntuación, error, pasapalabra, cambio de turno y sincronización.
 - [ ] Revancha online; no alterar producción.
-- [ ] Comprobación HTTPS del manifiesto RC6 y descarga real de MP3.
+- [x] Comprobación HTTPS del manifiesto RC6 y descarga real de MP3.
 - [ ] Safari físico: naturalidad de velocidad y calidad de voz (pendiente de escucha del usuario).
 
 La automatización de audio acelera/simula la duración de los clips para las pruebas funcionales; no sustituye escucha acústica humana.
+
+## Evidencia RC6 (20/10/2026)
+- [QA local Chromium/WebKit y partida completa — SUCCESS](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39529487189)
+- [Publicación Pages + pruebas HTTPS + dos sesiones online reales — SUCCESS](https://github.com/facundocapello-blip/mambapalabra-staging/actions/runs/39529752200)
+- Artefacto completo: `MAMBAPALABRA_FISH398_VOZ_UNICA_RC6_STAGING_QA` (ID 12314412806), fuente RC5 verificada.
+- `STAGING_BUILD.json`: RC6, 821 MP3 Fish, velocidad absoluta 1.22, 2 frases cortas; producción intacta.
+- No se hicieron pruebas acústicas con iPhone físico, reconocimiento de voz real ni revancha online completa.
