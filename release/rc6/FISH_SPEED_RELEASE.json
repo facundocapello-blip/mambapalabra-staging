@@ -1,0 +1,14 @@
+{
+  "version": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC6-STAGING",
+  "base": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC5-STAGING",
+  "source_sha256": "c62f1c0f6958c3fcc65112d917e3c567cc420d4ab24bb234779284227881411a",
+  "changed_audio_files": 0,
+  "scope": "STAGING only",
+  "definition_playback_rate": 1.22,
+  "speed_scope": "Fish question clips local and online; pitch preserved",
+  "added_audio_files": 2,
+  "short_turn_cues": [
+    "Incorrecto.",
+    "Pasapalabra."
+  ]
+}

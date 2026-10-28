@@ -1,0 +1,25 @@
+{
+  "version": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC6-STAGING",
+  "source": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC5-STAGING",
+  "model": "s2.1-pro-free",
+  "voice_id": "c4a325176443465ab0ba1b0cfa979995",
+  "clips": [
+    {
+      "file": "09_incorrecto_corto.mp3",
+      "text": "Incorrecto.",
+      "sha256": "69b0747652f811714f5a0b371435e7e5a691183e53d4ea5c1ea92876449b7f3e",
+      "bytes": 16717,
+      "cached": false
+    },
+    {
+      "file": "10_pasapalabra_corto.mp3",
+      "text": "Pasapalabra.",
+      "sha256": "1aa44734d7f7e1d19bcfcd0b37c8b0ee372d4665cbb4ef4e26808c68f12b26fb",
+      "bytes": 15881,
+      "cached": false
+    }
+  ],
+  "turn_handoff": "short cues only, no answer recitation or player announcement",
+  "definition_playback_rate": 1.22,
+  "scope": "STAGING only"
+}

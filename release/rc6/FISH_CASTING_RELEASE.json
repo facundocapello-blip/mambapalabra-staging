@@ -1,0 +1,16 @@
+{
+  "version": "B1.13.1-UX1-PIPER398-VR1-LECTURA-V2-FISH-INTRO-RC1-STAGING",
+  "base_sha256": "fa7b08464d7eb7b6a0ef5ff5bd8db2fe0282eb8cfaba24933a38ed2023ce07a8",
+  "clips_sha256": {
+    "fish-audio/01_definicion_A.mp3": "bfb2d0c891adc619d8721c1e35883f91b72a23cb876f354d66ad0ba80a40b72e",
+    "fish-audio/02_contiene_ENIE.mp3": "c82649fddb56a56eb37f5eadd56f769a31a72caa96828eabf04608574f7df607",
+    "fish-audio/03_intro_inicio.mp3": "87c1bcd8b3adbce814b08aef4136bf07365756e4553844b3b949b78fdf29d487",
+    "fish-audio/04_intro_solo.mp3": "6fe53bbabcef7fa2a3a20d54d1c8645663129f3484abc9d7ad98252bc5d1e766",
+    "fish-audio/05_intro_online.mp3": "e0155c89c7d4cf21810f9a626ae9849561dadbc4cf9dda43288ff39d3cdaa242",
+    "fish-audio/06_correcto.mp3": "a103d1ffd3c5533f5012fb21235b16c33aa785d60ac800099f59c4d6d6cd3b04",
+    "fish-audio/07_incorrecto.mp3": "79239877e9051dfce90a8b82eec7e089dd468fdbe2c7248bec5d339199f92718"
+  },
+  "scope": "STAGING only",
+  "definition_playback_rate": 1.22,
+  "speed_scope": "Fish question clips local and online; pitch preserved"
+}

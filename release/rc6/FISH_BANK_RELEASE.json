@@ -1,0 +1,11 @@
+{
+  "version": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC6-STAGING",
+  "model": "s2.1-pro-free",
+  "voice_id": "c4a325176443465ab0ba1b0cfa979995",
+  "bank_sha256": "35b96d6920647bbe6d17cdf208a5990ea3e2a890c549d308bd93d58abe3e9aa8",
+  "fish_clips": 811,
+  "casting_intro_clips": 8,
+  "scope": "STAGING only",
+  "speed_scope": "Fish question clips local and online; pitch preserved",
+  "definition_playback_rate": 1.22
+}

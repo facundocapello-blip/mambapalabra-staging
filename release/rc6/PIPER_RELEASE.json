@@ -1,0 +1,27 @@
+{
+  "base": "B1.13.1-RC1+UX1+BANCO194+ROTATION",
+  "approved": 398,
+  "piper_mp3": 811,
+  "original_mp3": 188,
+  "bank_sha256": "35b96d6920647bbe6d17cdf208a5990ea3e2a890c549d308bd93d58abe3e9aa8",
+  "voice": "es_MX-claude-high",
+  "voice_license": "Apache-2.0",
+  "note": "STAGING, no publicar en producción sin QA",
+  "version": "B1.13.1-UX1-FISH398-VOZ-UNICA-RC6-STAGING",
+  "voice_response": "VR1 aprobado",
+  "voice_style": "letra-directa-v2",
+  "length_scale": 0.9,
+  "voice_overlay": "Fish only: 811 bank clips, 3 intros, sudden death; no neutral voice fallback",
+  "fish_samples": 7,
+  "intro_modes": [
+    "general",
+    "solo",
+    "online"
+  ],
+  "production_untouched": true,
+  "fish_bank_mp3": 811,
+  "fish_voice": "c4a325176443465ab0ba1b0cfa979995",
+  "fish_model": "s2.1-pro-free",
+  "speed_scope": "Fish question clips local and online; pitch preserved",
+  "definition_playback_rate": 1.22
+}
